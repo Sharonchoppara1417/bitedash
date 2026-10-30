@@ -1,0 +1,2880 @@
+<mvc:View
+    controllerName="bitedash.bitedash.controller.View1"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+     xmlns:layout="sap.ui.layout"
+     xmlns:suite="sap.suite.ui.commons"
+     xmlns:grid="sap.ui.layout.cssgrid"
+     xmlns:f="sap.f"
+     xmlns:form="sap.ui.layout.form">
+            <Page
+                id="biteDashDetailPage"
+                enableScrolling="true"
+                class="sapUiContentPadding">
+ 
+    
+<customHeader>
+    <OverflowToolbar class="biteDashShellHeader">
+
+        <Title
+            text="{= ${app>/role} === 'customer' ? 'BiteDash' : 'Restaurant Console' }"
+            level="H1"/>
+
+        <ToolbarSpacer/>
+
+        <Text
+            text="{= ${app>/role} === 'customer' ? 'Food delivery made easy' : 'Manage menu and orders' }"/>
+
+        <SegmentedButton
+            selectedKey="{app>/role}"
+            selectionChange=".onRoleChange"
+            width="15rem">
+
+            <items>
+                <SegmentedButtonItem
+                    key="customer"
+                    text="Customer"/>
+
+                <SegmentedButtonItem
+                    key="business"
+                    text="Restaurant"/>
+            </items>
+
+        </SegmentedButton>
+
+    </OverflowToolbar>
+</customHeader>
+
+ <!--<customHeader>
+    <OverflowToolbar class="biteDashShellHeader">
+
+        <Title
+            text="{= ${app>/role} === 'customer' ? 'BiteDash' : 'Restaurant Console' }"
+            level="H1"/>
+
+        <ToolbarSpacer/>
+
+        <Text
+            text="{= ${app>/role} === 'customer' ? 'Food delivery made easy' : 'Manage menu and orders' }"
+            visible="{= !${device>/system/phone} }"/>
+
+        <SegmentedButton
+            selectedKey="{app>/role}"
+            selectionChange=".onRoleChange"
+            width="12rem">
+
+            <items>
+                <SegmentedButtonItem
+                    key="customer"
+                    text="Customer"/>
+
+                <SegmentedButtonItem
+                    key="business"
+                    text="Restaurant"/>
+            </items>
+
+        </SegmentedButton>
+
+    </OverflowToolbar>
+</customHeader>-->
+    
+
+        <content>
+            <VBox width="100%" 
+            renderType="Bare">
+
+                <!-- CUSTOMER NAVIGATION -->
+                <Toolbar
+                    visible="{= ${app>/role} === 'customer' }"  >
+
+                    <Button
+                        text="Home"
+                        icon="sap-icon://home"
+                        press=".onNavigate"
+                        type="Transparent">
+                        <customData>
+                            <core:CustomData
+                                key="section"
+                                value="customerHome"/>
+                        </customData>
+                    </Button>
+
+                    <Button
+                        text="Menu"
+                        icon="sap-icon://meal"
+                        press=".onNavigate"
+                        type="Transparent">
+                        <customData>
+                            <core:CustomData
+                                key="section"
+                                value="customerMenu"/>
+                        </customData>
+                    </Button>
+
+                    <Button
+                        text="Cart"
+                        icon="sap-icon://cart"
+                        press=".onNavigate"
+                        type="Transparent">
+                        <customData>
+                            <core:CustomData
+                                key="section"
+                                value="customerCart"/>
+                        </customData>
+                    </Button>
+
+                    <Button
+                        text="My Orders"
+                        icon="sap-icon://shipping-status"
+                        press=".onNavigate"
+                        type="Transparent">
+                        <customData>
+                            <core:CustomData
+                                key="section"
+                                value="customerOrders"/>
+                        </customData>
+                    </Button>
+                </Toolbar>
+                
+<!-- BUSINESS NAVIGATION -->
+<Toolbar
+    visible="{= ${app>/role} === 'business' &amp;&amp; ${app>/section} !== 'businessHome' }">
+
+    <Button
+        text="Home"
+        icon="sap-icon://home"
+        press=".onNavigate"
+        type="Transparent">
+        <customData>
+            <core:CustomData key="section" value="businessHome"/>
+        </customData>
+    </Button>
+
+    <Button
+        text="Dashboard"
+        icon="sap-icon://business-objects-experience"
+        press=".onNavigate"
+        type="Transparent">
+        <customData>
+            <core:CustomData key="section" value="businessDashboard"/>
+        </customData>
+    </Button>
+
+    <Button
+        text="Orders"
+        icon="sap-icon://shipping-status"
+        press=".onNavigate"
+        type="Transparent">
+        <customData>
+            <core:CustomData key="section" value="businessOrders"/>
+        </customData>
+    </Button>
+
+    <Button
+        text="Manage Menu"
+        icon="sap-icon://meal"
+        press=".onNavigate"
+        type="Transparent">
+        <customData>
+            <core:CustomData key="section" value="businessMenu"/>
+        </customData>
+    </Button>
+
+    <Button
+        text="Returns"
+        icon="sap-icon://undo"
+        press=".onNavigate"
+        type="Transparent">
+        <customData>
+            <core:CustomData key="section" value="businessReturns"/>
+        </customData>
+    </Button>
+</Toolbar>
+ 
+<!-- CUSTOMER HOME -->
+<VBox
+    visible="{= ${app>/role} === 'customer' &amp;&amp; ${app>/section} === 'customerHome' }"
+    class="sapUiSmallMargin"
+    renderType="Bare">
+
+    <!-- CENTRED COLUMN -->
+    <FlexBox width="100%" justifyContent="Center" renderType="Bare">
+        <VBox renderType="Bare">
+            <layoutData>
+                <FlexItemData growFactor="1" baseSize="72rem" maxWidth="72rem" minWidth="0"/>
+            </layoutData>
+
+            <!-- HERO -->
+            <Title
+                text="Hungry? Let's fix that."
+                titleStyle="H1"
+                textAlign="Center"
+                width="100%"
+                class="sapUiMediumMarginTop"/>
+            <Text
+                text="Discover meals and get your favourites delivered."
+                textAlign="Center"
+                width="100%"
+                class="sapUiTinyMarginTop sapUiSmallMarginBottom"/>
+
+            <!-- SEARCH + QUICK FILTERS -->
+            <FlexBox
+                width="100%"
+                justifyContent="Center"
+                alignItems="Center"
+                wrap="Wrap">
+                <SearchField
+                    width="24rem"
+                    placeholder="Search dishes, cuisines, restaurants..."
+                    liveChange=".onSearch"
+                    class="sapUiTinyMargin"/>
+                <ToggleButton
+                    text="Top Rated"
+                    icon="sap-icon://favorite"
+                    press=".onFilterToggle"
+                    class="sapUiTinyMargin">
+                    <customData>
+                        <core:CustomData key="filter" value="topRated"/>
+                    </customData>
+                </ToggleButton>
+                <ToggleButton
+                    text="Fast Delivery"
+                    icon="sap-icon://shipping-status"
+                    press=".onFilterToggle"
+                    class="sapUiTinyMargin">
+                    <customData>
+                        <core:CustomData key="filter" value="fastDelivery"/>
+                    </customData>
+                </ToggleButton>
+            </FlexBox>
+
+            
+            <!-- THREE MAIN CARDS -->
+            <FlexBox
+                width="100%"
+                wrap="Wrap"
+                alignItems="Stretch"
+                justifyContent="Center"
+                class="sapUiMediumMarginTop">
+
+                <!-- Card 1: Explore BiteDash -->
+                <Panel width="auto" height="100%" class="sapUiTinyMargin">
+                    <layoutData>
+                        <FlexItemData growFactor="1" baseSize="30%" minWidth="16rem"/>
+                    </layoutData>
+                    <VBox  alignItems="Start" renderType="Bare">
+                        <core:Icon
+                            src="sap-icon://meal"
+                            size="1.5rem"
+                            color="Positive"
+                            class="sapUiSmallMarginBottom"/>
+                        <Title text="Explore BiteDash" titleStyle="H4"/>
+                        <Text
+                            text="Browse Menu, Choose Feast, Fast Delivery."
+                            class="sapUiSmallMarginTop"/>
+                    </VBox>
+                </Panel>
+                
+                <!-- Card 2: Explore Menu -->
+                <Panel width="auto" height="100%" class="sapUiTinyMargin">
+                    <layoutData>
+                        <FlexItemData
+                            growFactor="1"
+                            baseSize="30%"
+                            minWidth="16rem"/>
+                    </layoutData>
+
+                    <VBox alignItems="Start" renderType="Bare">
+                        <core:Icon
+                            src="sap-icon://cart"
+                            size="1.5rem"
+                            color="Positive"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <Title text="Explore Menu" titleStyle="H4"/>
+
+                        <Text
+                            text="Browse dishes and add your favourites to the cart."
+                            class="sapUiSmallMarginTop"/>
+
+                        <Button
+                            text="View Menu"
+                            icon="sap-icon://meal"
+                            type="Emphasized"
+                            press=".onOpenMenu"
+                            class="sapUiSmallMarginTop"/>
+                    </VBox>
+                </Panel>
+
+
+                            
+
+                <!-- Card 3: Deals & More -->
+                <Panel width="auto" height="100%" class="sapUiTinyMargin">
+                    <layoutData>
+                        <FlexItemData growFactor="1" baseSize="30%" minWidth="16rem"/>
+                    </layoutData>
+                    <VBox  alignItems="Start" renderType="Bare">
+                        <core:Icon
+                            src="sap-icon://tag"
+                            size="1.5rem"
+                            color="Positive"
+                            class="sapUiSmallMarginBottom"/>
+                        <Title text="Deals &amp; More" titleStyle="H4"/>
+                        <Text
+                            text="20% off and free delivery promotions."
+                            class="sapUiSmallMarginTop"/>
+                    </VBox>
+                </Panel>
+            </FlexBox>
+
+            <!-- TOP LOCAL PICKS -->
+            <Title
+                text="Top Local Picks"
+                titleStyle="H3"
+                class="sapUiMediumMarginTop sapUiTinyMarginBegin"/>
+
+            <FlexBox
+                width="100%"
+                wrap="Wrap"
+                alignItems="Stretch"
+                class="sapUiTinyMarginTop">
+
+                <Panel width="auto" class="sapUiTinyMargin">
+                    <layoutData>
+                        <FlexItemData growFactor="1" baseSize="30%" minWidth="18rem"/>
+                    </layoutData>
+                    <HBox alignItems="Center">
+                        <core:Icon src="sap-icon://meal" size="2rem" class="sapUiSmallMarginEnd"/>
+                        <VBox renderType="Bare">
+                            <layoutData>
+                                <FlexItemData growFactor="1"/>
+                            </layoutData>
+                            <Title text="Chef Tony's Trattoria" titleStyle="H5"/>
+                            <Text text="Italian"/>
+                        </VBox>
+                        <Button text="View" type="Transparent" press=".onRestaurantPress">
+                            <customData>
+                                <core:CustomData key="restaurant" value="Chef Tony's Trattoria"/>
+                            </customData>
+                        </Button>
+                    </HBox>
+                </Panel>
+
+                <Panel width="auto" class="sapUiTinyMargin">
+                    <layoutData>
+                        <FlexItemData growFactor="1" baseSize="30%" minWidth="18rem"/>
+                    </layoutData>
+                    <HBox alignItems="Center">
+                        <core:Icon src="sap-icon://meal" size="2rem" class="sapUiSmallMarginEnd"/>
+                        <VBox renderType="Bare">
+                            <layoutData>
+                                <FlexItemData growFactor="1"/>
+                            </layoutData>
+                            <Title text="Burger Town" titleStyle="H5"/>
+                            <Text text="Burgers"/>
+                        </VBox>
+                        <Button text="View" type="Transparent" press=".onRestaurantPress">
+                            <customData>
+                                <core:CustomData key="restaurant" value="Burger Town"/>
+                            </customData>
+                        </Button>
+                    </HBox>
+                </Panel>
+
+                <Panel width="auto" class="sapUiTinyMargin">
+                    <layoutData>
+                        <FlexItemData growFactor="1" baseSize="30%" minWidth="18rem"/>
+                    </layoutData>
+                    <HBox alignItems="Center">
+                        <core:Icon src="sap-icon://meal" size="2rem" class="sapUiSmallMarginEnd"/>
+                        <VBox renderType="Bare">
+                            <layoutData>
+                                <FlexItemData growFactor="1"/>
+                            </layoutData>
+                            <Title text="Sushi Zen" titleStyle="H5"/>
+                            <Text text="Japanese"/>
+                        </VBox>
+                        <Button text="View" type="Transparent" press=".onRestaurantPress">
+                            <customData>
+                                <core:CustomData key="restaurant" value="Sushi Zen"/>
+                            </customData>
+                        </Button>
+                    </HBox>
+                </Panel>
+            </FlexBox>
+        </VBox>
+    </FlexBox>
+</VBox>
+                 <!-- CUSTOMER MENU -->
+<VBox
+    visible="{= ${app>/role} === 'customer' &amp;&amp; ${app>/section} === 'customerMenu' }"
+    width="100%"
+    renderType="Bare"
+    class= "sapUiContentPadding">
+
+    <!-- PAGE HEADER: title on the left, actions on the right -->
+    <OverflowToolbar design="Transparent">
+        <Title text="Explore Products" level="H1"/>
+        <ToolbarSpacer/>
+        <Button
+            text="Update"
+            icon="sap-icon://edit"
+            type="Transparent"
+            press=".onUpdateProduct"/>
+        <Button
+            text="Delete"
+            icon="sap-icon://delete"
+            type="Reject"
+            press=".onDeleteProduct"/>
+        <ToolbarSeparator/>
+        <Button
+            text="Add to Cart"
+            icon="sap-icon://cart"
+            type="Emphasized"
+            enabled="{app>/canAddSelectedProduct}"
+            press=".onAddSelectedProductToCart"/>
+    </OverflowToolbar>
+
+    <!-- PRODUCTS TABLE: search and categories live inside the table toolbars -->
+    <Table
+        id="foodMenuList"
+        width="100%"
+        items="{products>/items}"
+        mode="MultiSelect"
+        selectionChange=".onMenuProductSelect"
+        growing="true"
+        growingThreshold="8"
+        noDataText="No products found."
+        inset="false"
+        autoPopinMode="true"
+        contextualWidth="Auto">
+
+        <headerToolbar>
+            <OverflowToolbar>
+                <Title text="Available Products" level="H3"/>
+                <ToolbarSpacer/>
+                <SearchField
+                    id="foodSearchField"
+                    width="20rem"
+                    placeholder="Search products..."
+                    liveChange=".onSearch"/>
+            </OverflowToolbar>
+        </headerToolbar>
+
+        <!-- CATEGORY FILTERS (same handler and customData as before) -->
+        <infoToolbar>
+            <OverflowToolbar design="Transparent">
+                <Button
+                    text="All Products"
+                    icon="sap-icon://grid"
+                    type="Transparent"
+                    press=".onMenuCategoryButton">
+                    <customData>
+                        <core:CustomData key="category" value="All"/>
+                    </customData>
+                </Button>
+                <Button
+                    text="Food"
+                    icon="sap-icon://meal"
+                    type="Transparent"
+                    press=".onMenuCategoryButton">
+                    <customData>
+                        <core:CustomData key="category" value="Food"/>
+                    </customData>
+                </Button>
+                <Button
+                    text="Beverages"
+                    icon="sap-icon://coffee-cup"
+                    type="Transparent"
+                    press=".onMenuCategoryButton">
+                    <customData>
+                        <core:CustomData key="category" value="Beverages"/>
+                    </customData>
+                </Button>
+                <Button
+                    text="Electronics"
+                    icon="sap-icon://laptop"
+                    type="Transparent"
+                    press=".onMenuCategoryButton">
+                    <customData>
+                        <core:CustomData key="category" value="Electronics"/>
+                    </customData>
+                </Button>
+            </OverflowToolbar>
+        </infoToolbar>
+
+        <columns>
+            <Column width="5%" importance="Low">
+                <Text text="ID"/>
+            </Column>
+            <Column width="20%">
+                <Text text="Product"/>
+            </Column>
+            <Column  width="30%" importance="Medium">
+                <Text text="Description"/>
+            </Column>
+            <Column width="20%" hAlign="Center" importance="Medium">
+                <Text text="Rating"/>
+            </Column>
+            <Column width="20%" hAlign="End">
+                <Text text="Price"/>
+            </Column>
+        </columns>
+
+        <items>
+            <ColumnListItem type="Inactive" vAlign="Middle">
+                <cells>
+                    <Text text="{products>ID}"/>
+
+                   <!-- <ObjectIdentifier title="{products>Name}"/>-->
+                    <Text text="{products>Name}" wrapping="true"/>
+
+                    <Text text="{products>Description}" wrapping="true"/>
+
+                    <RatingIndicator
+                        value="{products>Rating}"
+                        maxValue="5"
+                        iconSize="0.875rem"
+                        editable="false"/>
+                    <Text text="{= '₹ ' + Number(${products>Price}).toFixed(2) }"/>
+                    <!--<ObjectNumber
+                        number="{= Number(${products>Price}).toFixed(2) }"
+                        unit="₹"
+                        emphasized="true"/>-->
+                </cells>
+            </ColumnListItem>
+        </items>
+    </Table>
+</VBox>
+
+<!-- CUSTOMER CART -->
+<VBox
+    visible="{= ${app>/role} === 'customer' &amp;&amp; ${app>/section} === 'customerCart' }"
+    class="sapUiSmallMargin"
+    renderType="Bare">
+
+    <!-- CENTRED COLUMN -->
+    <FlexBox width="100%" justifyContent="Center" renderType="Bare">
+        <VBox renderType="Bare">
+            <layoutData>
+                <FlexItemData growFactor="1" baseSize="40rem" maxWidth="40rem" minWidth="0"/>
+            </layoutData>
+
+            <!-- HEADER -->
+            <Title text="Your Cart" titleStyle="H1"/>
+            <Text
+                text="{= 'Total items: ' + (Number(${cart>/count}) || 0) }"
+                class="sapUiTinyMarginTop sapUiSmallMarginBottom"/>
+
+            <!-- EMPTY CART -->
+            <VBox
+                visible="{= ${cart>/items}.length === 0 }"
+                alignItems="Center"
+                class="sapUiLargeMarginTop sapUiLargeMarginBottom"
+                renderType="Bare">
+                <core:Icon
+                    src="sap-icon://cart"
+                    size="3rem"
+                    color="Neutral"
+                    class="sapUiMediumMarginBottom"/>
+                <Title text="Your cart is empty" titleStyle="H3"/>
+                <Text
+                    text="Please explore the menu."
+                    class="sapUiTinyMarginTop sapUiSmallMarginBottom"/>
+                <Button
+                    text="Continue Shopping"
+                    icon="sap-icon://meal"
+                    type="Emphasized"
+                    press=".onOpenMenu"/>
+            </VBox>
+
+            <!-- ITEM CARDS -->
+            <VBox
+                id="cartItemsList"
+                items="{cart>/items}"
+                visible="{= ${cart>/items}.length > 0 }"
+                renderType="Bare">
+
+                <Panel width="auto" class="sapUiTinyMarginBottom">
+                    <HBox alignItems="Start" justifyContent="SpaceBetween">
+
+                        <!-- NAME, UNIT PRICE, QUANTITY -->
+                        <VBox renderType="Bare">
+                            <layoutData>
+                                <FlexItemData growFactor="1"/>
+                            </layoutData>
+
+                            <Title text="{cart>Name}" titleStyle="H5" wrapping="true"/>
+
+                            <Text
+                                text="{= '₹' + (Number(${cart>Price}) || 0).toFixed(2) + ' each' }"
+                                class="sapUiTinyMarginBottom"/>
+
+                            <HBox alignItems="Center">
+                                <Button
+                                    icon="sap-icon://less"
+                                    tooltip="Decrease quantity"
+                                    press=".onDecreaseCartItem"/>
+                                <Text
+                                    text="{cart>Quantity}"
+                                    width="2.5rem"
+                                    textAlign="Center"/>
+                                <Button
+                                    icon="sap-icon://add"
+                                    tooltip="Increase quantity"
+                                    press=".onIncreaseCartItem"/>
+                            </HBox>
+                        </VBox>
+
+                        <!-- LINE TOTAL + REMOVE -->
+                        <VBox alignItems="End" renderType="Bare">
+                            <Title
+                                titleStyle="H4"
+                                wrapping="false"
+                                text="{= '₹' + ((Number(${cart>Price}) || 0) * (Number(${cart>Quantity}) || 1)).toFixed(2) }"
+                                class="sapUiTinyMarginBottom"/>
+                            <Button
+                                text="Remove"
+                                icon="sap-icon://delete"
+                                type="Transparent"
+                                tooltip="Remove item"
+                                press=".onRemoveCartItem"/>
+                        </VBox>
+                    </HBox>
+                </Panel>
+            </VBox>
+
+            <!-- ORDER SUMMARY -->
+            <Panel
+                id="cartOrderSummary"
+                headerText="Order Summary"
+                width="auto"
+                visible="{= ${cart>/items}.length > 0 }"
+                class="sapUiSmallMarginTop">
+
+                <HBox justifyContent="SpaceBetween">
+                    <Text text="Items"/>
+                    <Text text="{= (Number(${cart>/count}) || 0) + ' item(s)' }"/>
+                </HBox>
+
+                <HBox
+                    justifyContent="SpaceBetween"
+                    alignItems="Center"
+                    class="sapUiSmallMarginTop sapUiSmallMarginBottom">
+                    <Title text="Order Total" titleStyle="H4"/>
+                    <Title
+                        titleStyle="H3"
+                        wrapping="false"
+                        text="{= '₹' + (Number(${cart>/total}) || 0).toFixed(2) }"/>
+                </HBox>
+
+                <Button
+                    text="Proceed to Checkout"
+                    icon="sap-icon://locked"
+                    type="Emphasized"
+                    width="100%"
+                    enabled="{= (Number(${cart>/count}) || 0) > 0 }"
+                    press=".onProceedToCheckout"/>
+
+                <Button
+                    text="Continue Shopping"
+                    icon="sap-icon://nav-back"
+                    width="100%"
+                    press=".onOpenMenu"
+                    class="sapUiTinyMarginTop"/>
+            </Panel>
+
+            <!-- FOOTER NOTE -->
+            <Text
+                visible="{= ${cart>/items}.length > 0 }"
+                text="Review your cart, confirm delivery details, and place order at checkout."
+                textAlign="Center"
+                width="100%"
+                class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+        </VBox>
+    </FlexBox>
+</VBox>
+
+<!-- CUSTOMER CHECKOUT -->
+<VBox
+    id="customerCheckoutSection"
+    visible="{= ${app>/role} === 'customer' &amp;&amp; ${app>/section} === 'checkout' }"
+    class="sapUiSmallMargin"
+    renderType="Bare">
+
+    <!-- CENTRED COLUMN -->
+    <FlexBox width="100%" justifyContent="Center" renderType="Bare">
+        <VBox renderType="Bare">
+            <layoutData>
+                <FlexItemData growFactor="1" baseSize="72rem" maxWidth="72rem" minWidth="0"/>
+            </layoutData>
+
+            <!-- HEADER -->
+            <Title text="Checkout" titleStyle="H1"/>
+            <Text
+                text="Confirm your details and place your order."
+                class="sapUiTinyMarginTop sapUiSmallMarginBottom"/>
+
+            <FlexBox width="100%" wrap="Wrap" alignItems="Start">
+
+                <!-- LEFT: FORM CARDS -->
+                <VBox renderType="Bare">
+                    <layoutData>
+                        <FlexItemData growFactor="2" baseSize="60%" minWidth="20rem"/>
+                    </layoutData>
+
+                    <!-- DELIVERY DETAILS -->
+                    <Panel
+                        headerText="Delivery Details"
+                        width="auto"
+                        class="sapUiTinyMargin">
+
+                        <Label
+                            text="Full Name"
+                            required="true"
+                            labelFor="checkoutCustomerName"/>
+                        <Input
+                            id="checkoutCustomerName"
+                            value="{checkout>/CustomerName}"
+                            placeholder="Enter your full name"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <Label
+                            text="Mobile Number"
+                            required="true"
+                            labelFor="checkoutPhone"/>
+                        <Input
+                            id="checkoutPhone"
+                            value="{checkout>/Phone}"
+                            type="Tel"
+                            maxLength="10"
+                            placeholder="Enter your 10-digit mobile number"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <Label
+                            text="Delivery Address"
+                            required="true"
+                            labelFor="checkoutAddress"/>
+                        <TextArea
+                            id="checkoutAddress"
+                            value="{checkout>/Address}"
+                            rows="3"
+                            width="100%"
+                            placeholder="Enter your complete delivery address"/>
+                    </Panel>
+
+                    <!-- PAYMENT METHOD -->
+                    <Panel
+                        headerText="Payment Method"
+                        width="auto"
+                        class="sapUiTinyMargin">
+
+                        <RadioButtonGroup
+                            id="checkoutPaymentMethod"
+                            columns="1"
+                            selectedIndex="{checkout>/PaymentIndex}">
+                            <buttons>
+                                <RadioButton text="Cash on Delivery"/>
+                                <RadioButton text="UPI (Demo)"/>
+                                <RadioButton text="Card (Demo)"/>
+                            </buttons>
+                        </RadioButtonGroup>
+                    </Panel>
+                </VBox>
+
+                <!-- RIGHT: ORDER SUMMARY -->
+                <Panel
+                    headerText="Order Summary"
+                    width="auto"
+                    class="sapUiTinyMargin">
+                    <layoutData>
+                        <FlexItemData growFactor="1" baseSize="32%" minWidth="18rem"/>
+                    </layoutData>
+
+                    <!-- ITEMS -->
+                    <Text
+                        visible="{= ${cart>/items}.length === 0 }"
+                        text="Your cart is empty"
+                        class="sapUiSmallMarginBottom"/>
+
+                    <VBox
+                        id="checkoutItemsList"
+                        items="{cart>/items}"
+                        renderType="Bare">
+                        <HBox
+                            justifyContent="SpaceBetween"
+                            alignItems="Start"
+                            class="sapUiSmallMarginBottom">
+                            <VBox renderType="Bare">
+                                <layoutData>
+                                    <FlexItemData growFactor="1"/>
+                                </layoutData>
+                                <Title text="{cart>Name}" titleStyle="H5" wrapping="true"/>
+                                <Text
+                                    text="{= 'Qty ' + ${cart>Quantity} + ' × ₹' + (Number(${cart>Price}) || 0).toFixed(2) }"/>
+                            </VBox>
+                            <Title
+                                titleStyle="H5"
+                                wrapping="false"
+                                text="{= '₹' + ((Number(${cart>Price}) || 0) * (Number(${cart>Quantity}) || 1)).toFixed(2) }"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- TOTALS -->
+                    <HBox
+                        justifyContent="SpaceBetween"
+                        class="sapUiSmallMarginTop">
+                        <Text text="Items"/>
+                        <Text text="{= (${cart>/count} || 0) + ' item(s)' }"/>
+                    </HBox>
+
+                    <HBox
+                        justifyContent="SpaceBetween"
+                        alignItems="Center"
+                        class="sapUiSmallMarginTop sapUiSmallMarginBottom">
+                        <Title text="Order Total" titleStyle="H4"/>
+                        <Title
+                            titleStyle="H3"
+                            wrapping="false"
+                            text="{= '₹' + (Number(${cart>/total}) || 0).toFixed(2) }"/>
+                    </HBox>
+
+                    <!-- ACTIONS -->
+                    <Button
+                        text="Place Order"
+                        icon="sap-icon://accept"
+                        type="Emphasized"
+                        width="100%"
+                        enabled="{= ${cart>/items}.length > 0 }"
+                        press=".onPlaceOrder"/>
+
+                    <Button
+                        text="Back to Cart"
+                        icon="sap-icon://nav-back"
+                        width="100%"
+                        press=".onBackToCart"
+                        class="sapUiTinyMarginTop"/>
+                </Panel>
+            </FlexBox>
+        </VBox>
+    </FlexBox>
+</VBox>
+
+
+<!--CUSTOMER ORDERS-->
+<VBox
+    id="customerOrdersSection"
+    visible="{= ${app>/role} === 'customer' &amp;&amp; ${app>/section} === 'customerOrders' }"
+    width="100%"
+    class="sapUiSmallMargin"
+    renderType="Bare">
+
+    <!-- MAIN TWO-COLUMN LAYOUT -->
+    <HBox
+        width="100%"
+        alignItems="Start"
+        renderType="Bare">
+
+        <!-- LEFT: ORDER LIST -->
+        <VBox
+            width="28%"
+            class="sapUiTinyMarginEnd"
+            renderType="Bare">
+
+            <Title
+                text="{= 'My Orders (' + ${orderedProducts>/items}.length + ')' }"
+                level="H4"
+                class="sapUiTinyMarginBottom"/>
+
+            <List
+                id="orderedProductsList"
+                items="{orderedProducts>/items}"
+                mode="None"
+                noDataText="You have not placed any orders yet."
+                showSeparators="Inner">
+
+                <CustomListItem
+                    type="Active"
+                    press=".onOrderedProductSelect">
+
+                    <VBox
+                        class="sapUiSmallMargin"
+                        renderType="Bare">
+
+                        <!-- ORDER NUMBER AND TOTAL -->
+                        <HBox
+                            width="100%"
+                            justifyContent="SpaceBetween"
+                            alignItems="Center">
+
+                            <Title
+                                text="{= 'Order #' + ${orderedProducts>OrderID} }"
+                                level="H5"/>
+
+                            <Title
+                                text="{= '₹ ' + (Number(${orderedProducts>Total}) || 0).toFixed(2) }"
+                                level="H5"/>
+                        </HBox>
+
+                        <!-- ORDERED PRODUCTS -->
+                        <Text
+                            text="{orderedProducts>ItemSummary}"
+                            wrapping="true"
+                            class="sapUiTinyMarginTop"/>
+
+                        <!-- ORDER STATUS -->
+                        <ObjectStatus
+                            text="{= ${orderedProducts>Status} === 'On The Way' ? 'Out for Delivery' : ${orderedProducts>Status} }"
+                            state="{=
+                                ${orderedProducts>Status} === 'Delivered' ? 'Success' :
+                                ${orderedProducts>Status} === 'Cancelled' ? 'Error' :
+                                ${orderedProducts>Status} === 'On The Way' ? 'Information' :
+                                'Warning'
+                            }"
+                            class="sapUiTinyMarginTop"/>
+
+                    </VBox>
+                </CustomListItem>
+            </List>
+        </VBox>
+
+        <!-- RIGHT: ORDER DETAILS -->
+        <VBox
+            width="70%"
+            renderType="Bare">
+            
+
+            <!-- EMPTY STATE -->
+            <MessageStrip
+                text="Select an order from the left to view its details."
+                type="Information"
+                showIcon="true"
+                showCloseButton="false"
+                visible="{= !${selectedOrderedProduct>/OrderID} }"
+                class="sapUiTinyMarginBottom"/>
+
+            <!-- SELECTED ORDER CONTENT -->
+            <VBox
+                visible="{= !!${selectedOrderedProduct>/OrderID} }"
+                width="100%"
+                renderType="Bare">
+
+                <!-- ORDER NUMBER AND TOTAL: ONE ROW -->
+                <HBox
+                    width="100%"
+                    alignItems="Center"
+                    justifyContent="SpaceBetween"
+                    class="sapUiTinyMarginBottom">
+
+                    <Title
+                        text="{= 'Order #' + ${selectedOrderedProduct>/OrderID} }"
+                        level="H2"/>
+
+                    <Title
+                        text="{= '₹ ' + (Number(${selectedOrderedProduct>/Total}) || 0).toFixed(2) }"
+                        level="H2"/>
+                </HBox>
+
+                <!-- ORDER DATE -->
+                <Text
+                    text="{
+                        path: 'selectedOrderedProduct>/OrderDate',
+                        type: 'sap.ui.model.type.DateTime',
+                        formatOptions: {
+                            pattern: 'dd-MM-yyyy, hh:mm a',
+                            UTC: true
+                        }
+                    }"
+                    wrapping="true"
+                    class="sapUiTinyMarginBottom"/>
+
+                <!-- PAYMENT METHOD AND ORDER STATUS: ONE ROW -->
+                <HBox
+                    width="100%"
+                    alignItems="Center"
+                    justifyContent="SpaceBetween"
+                    class="sapUiTinyMarginBottom">
+
+                    <Text
+                        text="{= ${selectedOrderedProduct>/PaymentMethod} || 'Not specified' }"
+                        wrapping="false"
+                        width="100%"/>
+
+                    <ObjectStatus
+                        text="{selectedOrderedProduct>/Status}"
+                        state="{=
+                            ${selectedOrderedProduct>/Status} === 'Delivered' ? 'Success' :
+                            ${selectedOrderedProduct>/Status} === 'Cancelled' ? 'Error' :
+                            'Information'
+                        }"/>
+                </HBox>
+
+                <!-- ORDER ACTIONS -->
+                <Toolbar class="sapUiTinyMarginBottom">
+                    <ToolbarSpacer/>
+
+                    <Button
+                        text="Track Order"
+                        icon="sap-icon://shipping-status"
+                        type="Transparent"
+                        press=".onTrackSelectedOrder"
+                        enabled="{= !!${selectedOrderedProduct>/OrderID} }"/>
+
+                    <Button
+                        text="Cancel"
+                        icon="sap-icon://sys-cancel"
+                        type="Transparent"
+                        press=".onCancelSelectedOrder"
+                        enabled="{=
+                            ${selectedOrderedProduct>/Status} === 'Placed' ||
+                            ${selectedOrderedProduct>/Status} === 'Accepted' ||
+                            ${selectedOrderedProduct>/Status} === 'Preparing' ||
+                            ${selectedOrderedProduct>/Status} === 'Packed'
+                        }"/>
+
+                    <Button
+                        text="Return Request"
+                        icon="sap-icon://undo"
+                        type="Transparent"
+                        press=".onReturnSelectedOrder"
+                        enabled="{=
+                            ${selectedOrderedProduct>/Status} === 'Delivered' &amp;&amp;
+                            !${selectedOrderedProduct>/ReturnStatus}
+                        }"/>
+                </Toolbar>
+                 <Title
+                            text="Items Ordered"
+                            level="H4"
+                            class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
+                           
+
+                <!-- PRODUCTS IN THE ORDER -->
+                <List
+                    id="orderedProductDetailsList"
+                    items="{selectedOrderedProduct>/Items}"
+                    showSeparators="Inner"
+                    noDataText="No product details available">
+
+                    <CustomListItem>
+                        <VBox
+                            width="100%"
+                            class="sapUiTinyMarginTop sapUiTinyMarginBottom"
+                            renderType="Bare">
+                            <!-- PRODUCT NAME AND PRICE -->
+                            <HBox
+                                width="100%"
+                                justifyContent="SpaceBetween"
+                                alignItems="Start">
+
+                                <VBox
+                                    width="70%"
+                                    renderType="Bare">
+
+                                    <Title
+                                        text="{selectedOrderedProduct>Name}"
+                                        level="H4"
+                                        wrapping="true"/>
+
+                                    <Text
+                                        text="{= 'Product ID: ' + ${selectedOrderedProduct>ID} }"
+                                        wrapping="true"
+                                        class="sapUiTinyMarginTop"/>
+                                </VBox>
+
+                                <Title
+                                    text="{= '₹ ' + (Number(${selectedOrderedProduct>Price}) || 0).toFixed(2) }"
+                                    level="H4"/>
+                            </HBox>
+
+                            <!-- DESCRIPTION -->
+                            <VBox
+                                class="sapUiTinyMarginTop"
+                                renderType="Bare">
+
+                                <Text text="Description"/>
+
+                                <Text
+                                    text="{= ${selectedOrderedProduct>Description} || 'No description available' }"
+                                    wrapping="true"/>
+                            </VBox>
+
+                            <!-- RATING -->
+                            <VBox
+                                class="sapUiTinyMarginTop"
+                                renderType="Bare">
+
+                                <Text text="Rating"/>
+
+                                <ObjectStatus
+                                    text="{= (Number(${selectedOrderedProduct>Rating}) || 0) + ' / 5' }"
+                                    icon="sap-icon://favorite"
+                                    state="None"/>
+                            </VBox>
+
+                            <!-- QUANTITY AND ITEM TOTAL -->
+                            <HBox
+                                width="100%"
+                                justifyContent="SpaceBetween"
+                                alignItems="Center"
+                                class="sapUiTinyMarginTop">
+
+                                <Text
+                                    text="{= 'Quantity: ' + (Number(${selectedOrderedProduct>Quantity}) || 1) }"/>
+
+                                <Text
+                                    text="{= 'Item Total: ₹ ' + ((Number(${selectedOrderedProduct>Price}) || 0) * (Number(${selectedOrderedProduct>Quantity}) || 1)).toFixed(2) }"
+                                    wrapping="false"/>
+                            </HBox>
+
+                        </VBox>
+                    </CustomListItem>
+                </List>
+                
+
+
+                <!-- PROFESSIONAL BILL DETAILS -->
+                <VBox
+                    width="100%"
+                    class="sapUiSmallMarginTop sapUiSmallMarginBottom"
+                    renderType="Bare">
+
+                    <Title
+                        text="Bill Details"
+                        level="H3"
+                        class="sapUiSmallMarginBottom"/>
+
+                    <!-- ITEMS TOTAL -->
+                    <HBox
+                        width="100%"
+                        justifyContent="SpaceBetween"
+                        alignItems="Center">
+
+                        <Text text="Items Total"/>
+
+                        <Text
+                            text="{= '₹ ' + (Number(${selectedOrderedProduct>/Total}) || 0).toFixed(2) }"/>
+                    </HBox>
+
+                    <!-- DELIVERY FEE: FREE FOR ORDERS OF ₹50 OR MORE -->
+                    <HBox
+                        width="100%"
+                        justifyContent="SpaceBetween"
+                        alignItems="Center"
+                        class="sapUiTinyMarginTop">
+
+                        <Text text="Delivery Fee"/>
+
+                        <Text
+                            text="{= (Number(${selectedOrderedProduct>/Total}) || 0) >= 50 ? 'FREE' : '₹ 20.00' }"
+                            class="{= (Number(${selectedOrderedProduct>/Total}) || 0) >= 50 ? 'sapUiTinyMarginEnd' : '' }"/>
+                    </HBox>
+
+                    <!-- DISCOUNT: 10% FOR ITEMS TOTAL OF ₹200 OR MORE -->
+                
+
+                    
+                <HBox
+                    width="100%"
+                    justifyContent="SpaceBetween"
+                    alignItems="Center"
+                    class="sapUiTinyMarginTop sapUiTinyMarginBottom">
+
+                    <Text text="Discount (5%)"/>
+
+                    <Text
+                        text="{= '- ₹ ' + (
+                            (Number(${selectedOrderedProduct>/Total}) || 0) * 0.05
+                        ).toFixed(2) }"/>
+                </HBox>
+
+
+                    <!-- GST: 5% AFTER DISCOUNT -->
+                    <HBox
+                        width="100%"
+                        justifyContent="SpaceBetween"
+                        alignItems="Center"
+                        class="sapUiTinyMarginTop">
+
+                        <Text text="GST (5%)"/>
+                        
+                        <Text
+                            text="{= '₹ ' + (
+                                (
+                                    (Number(${selectedOrderedProduct>/Total}) || 0)
+                                    - (Number(${selectedOrderedProduct>/Total}) || 0) * 0.05
+                                ) * 0.05
+                            ).toFixed(2) }"/>
+
+                    </HBox>
+                    <Text
+                    text=" "
+                    class="sapUiTinyMarginTop sapUiTinyMarginBottom"/>
+
+               
+                    <!-- GRAND TOTAL -->
+                    <HBox
+                        width="100%"
+                        justifyContent="SpaceBetween"
+                        alignItems="Center">
+                    
+                <Title
+                    text="Grand Total"
+                    level="H4"/>
+
+                <Title
+                
+
+
+                  text="{= '₹ ' + (
+                        (Number(${selectedOrderedProduct>/Total}) || 0)
+                        - ((Number(${selectedOrderedProduct>/Total}) || 0) * 0.05)
+                        + ((Number(${selectedOrderedProduct>/Total}) || 0) &lt; 50 ? 20 : 0)
+
+                        + ((Number(${selectedOrderedProduct>/Total}) || 0) * 0.95 * 0.05)
+                    ).toFixed(2) }"
+                    level="H4"/>
+                    </HBox>
+
+                    <Text
+                        text="Inclusive of applicable charges and GST"
+                        class="sapUiTinyMarginTop"
+                        wrapping="true"/>
+
+                </VBox>
+                       </VBox>
+                            <!-- END SELECTED ORDER CONTENT -->
+
+                        </VBox>
+                        <!-- END RIGHT: ORDER DETAILS -->
+
+                   </HBox>
+                    <!-- END MAIN TWO-COLUMN LAYOUT -->
+
+                </VBox>
+                <!-- END CUSTOMER MY ORDERS -->
+
+                <!-- CUSTOMER TRACK ORDER -->
+                <VBox
+                    visible="{= ${app>/role} === 'customer' &amp;&amp; ${app>/section} === 'customerTracking' }"
+                    class="sapUiSmallMargin"
+                    renderType="Bare">
+
+                    <!-- BACK LINK -->
+                    <HBox
+                        justifyContent="Start"
+                        width="100%">
+
+                        <Button
+                            text="Back to My Orders"
+                            icon="sap-icon://nav-back"
+                            type="Transparent"
+                            press=".onTrackingBack"/>
+                    </HBox>
+
+                    <!-- PAGE HEADER -->
+                    <FlexBox
+                        width="100%"
+                        alignItems="Center"
+                        justifyContent="SpaceBetween"
+                        wrap="Wrap"
+                        class="sapUiTinyMarginTop">
+
+                        <VBox renderType="Bare">
+                            <Title
+                                text="Track Order #{trackOrder>/orderId}"
+                                titleStyle="H1"/>
+
+                            <HBox
+                                alignItems="Center"
+                                class="sapUiTinyMarginTop">
+
+                                <Text
+                                    text="Order #{trackOrder>/orderId} • Current Status:"
+                                    class="sapUiTinyMarginEnd"/>
+
+                                <ObjectStatus
+                                    text="{trackOrder>/status}"
+                                    state="Success"/>
+                            </HBox>
+                        </VBox>
+
+                        <ObjectStatus
+                            text="Order {trackOrder>/status}"
+                            icon="sap-icon://sys-enter-2"
+                            state="Success"
+                            inverted="true"/>
+                    </FlexBox>
+
+                    <!-- ORDER TRACKING -->
+                    <Panel
+                        headerText="Order Tracking"
+                        class="sapUiSmallMarginTop"
+                        width="100%">
+
+                        <suite:ProcessFlow
+                            id="trackingFlow"
+                            scrollable="true"
+                            wheelZoomable="false"
+                            lanes="{trackOrder>/lanes}" nodes="{trackOrder>/nodes}">
+
+                            <suite:lanes>
+                                <suite:ProcessFlowLaneHeader
+                                    laneId="{trackOrder>id}"
+                                    iconSrc="{trackOrder>icon}"
+                                    text="{trackOrder>label}"
+                                    position="{trackOrder>position}"/>
+                            </suite:lanes>
+                            <suite:nodes>
+                                <suite:ProcessFlowNode
+                                    nodeId="{trackOrder>id}"
+                                    laneId="{trackOrder>lane}"
+                                    title="{trackOrder>title}"
+                                    state="{trackOrder>state}"
+                                    stateText="{trackOrder>stateText}"
+                                    texts="{trackOrder>texts}"
+                                    children="{trackOrder>children}"/>
+                            </suite:nodes>
+
+                        </suite:ProcessFlow>
+                    </Panel>
+
+                    <!-- ORDER INFORMATION -->
+                    <Panel
+                        headerText="Order Information"
+                        class="sapUiSmallMarginTop">
+
+                        <FlexBox
+                            wrap="Wrap"
+                            justifyContent="SpaceBetween"
+                            width="100%">
+
+                            <VBox
+                                class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
+                                renderType="Bare">
+
+                                <Label text="Customer Name"/>
+                                <Text text="{trackOrder>/customerName}"/>
+                            </VBox>
+
+                            <VBox
+                                class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
+                                renderType="Bare">
+
+                                <Label text="Delivery Address"/>
+                                <Text text="{trackOrder>/address}"/>
+                            </VBox>
+
+                            <VBox
+                                class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
+                                renderType="Bare">
+
+                                <Label text="Payment Mode"/>
+                                <Text text="{trackOrder>/paymentMode}"/>
+                            </VBox>
+
+                            <VBox
+                                class="sapUiSmallMarginBottom"
+                                renderType="Bare">
+
+                                <Label text="Final Order Status"/>
+                                <ObjectStatus
+                                    text="{trackOrder>/status}"
+                                    state="Success"/>
+                            </VBox>
+                        </FlexBox>
+                    </Panel>
+
+                    <!-- ITEMS + BILL SIDE BY SIDE -->
+                    <FlexBox
+                        width="100%"
+                        wrap="Wrap"
+                        alignItems="Stretch"
+                        class="sapUiSmallMarginTop">
+
+                        <!-- ITEMS ORDERED -->
+                        <Panel
+                            headerText="Items Ordered"
+                            class="sapUiTinyMarginEnd">
+
+                            <layoutData>
+                                <FlexItemData
+                                    growFactor="1"
+                                    baseSize="48%"
+                                    minWidth="320px"/>
+                            </layoutData>
+
+                            <List
+                                items="{trackOrder>/items}"
+                                showSeparators="Inner"
+                                noDataText="No product details available">
+                                <CustomListItem>
+                    <HBox
+                        width="100%"
+                        alignItems="Center"
+                        justifyContent="Start"
+                        renderType="Bare"
+                        class="sapUiTinyMarginBegin sapUiTinyMarginEnd">
+
+                        <!-- PRODUCT NAME -->
+                        <Text
+                            text="{trackOrder>name}"
+                            width="45%"
+                            wrapping="false"/>
+
+                        <!-- QUANTITY -->
+                        <Text
+                            text="{= 'x ' + (Number(${trackOrder>qty}) || 1) }"
+                            width="20%"
+                            wrapping="false"
+                            textAlign="Center"/>
+
+                        <!-- PRICE -->
+                        <Text
+                            text="{= '₹ ' + (Number(${trackOrder>price}) || 0).toFixed(2) }"
+                            width="35%"
+                            wrapping="false"
+                            textAlign="End"/>
+                    </HBox>
+                </CustomListItem>           
+                            </List>
+                        </Panel>
+
+                        <!-- BILL DETAILS -->
+                        <Panel
+                            headerText="Bill Details"
+                            class="sapUiTinyMarginBegin">
+
+                            <layoutData>
+                                <FlexItemData
+                                    growFactor="1"
+                                    baseSize="48%"
+                                    minWidth="320px"/>
+                            </layoutData>
+
+                            <VBox
+                                width="100%"
+                                class="sapUiSmallMargin"
+                                renderType="Bare">
+
+                                <!-- ITEMS TOTAL -->
+                                <HBox
+                                    width="100%"
+                                    justifyContent="SpaceBetween"
+                                    alignItems="Center">
+
+                                    <Text text="Items Total"/>
+
+                                    <Text
+                                        text="{= '₹ ' + (Number(${trackOrder>/bill/subtotal}) || 0).toFixed(2) }"/>
+                                </HBox>
+
+                                <!-- DELIVERY FEE -->
+                                <HBox
+                                    width="100%"
+                                    justifyContent="SpaceBetween"
+                                    alignItems="Center"
+                                    class="sapUiTinyMarginTop">
+
+                                    <Text text="Delivery Fee"/>
+
+                                    <Text
+                                        text="{= (Number(${trackOrder>/bill/subtotal}) || 0) >= 50 ? 'FREE' : '₹ 20.00' }"/>
+                                </HBox>
+
+                                <!-- DISCOUNT -->
+                                <HBox
+                                    width="100%"
+                                    justifyContent="SpaceBetween"
+                                    alignItems="Center"
+                                    class="sapUiTinyMarginTop sapUiTinyMarginBottom">
+
+                                    <Text text="Discount (5%)"/>
+
+                                    <Text
+                                        text="{= '- ₹ ' + ((Number(${trackOrder>/bill/subtotal}) || 0) * 0.05).toFixed(2) }"/>
+                                </HBox>
+
+                                <!-- GST -->
+                                <HBox
+                                    width="100%"
+                                    justifyContent="SpaceBetween"
+                                    alignItems="Center"
+                                    class="sapUiTinyMarginTop">
+
+                                    <Text text="GST (5%)"/>
+
+                                    <Text
+                                        text="{= '₹ ' + ((Number(${trackOrder>/bill/subtotal}) || 0) * 0.95 * 0.05).toFixed(2) }"/>
+                                </HBox>
+
+                                <!-- GRAND TOTAL -->
+                                <HBox
+                                    width="100%"
+                                    justifyContent="SpaceBetween"
+                                    alignItems="Center"
+                                    class="sapUiSmallMarginTop">
+
+                                    <Title
+                                        text="Grand Total"
+                                        level="H4"/>
+
+                                    <Title
+                                        text="{= '₹ ' + (
+                                            (Number(${trackOrder>/bill/subtotal}) || 0)
+                                            - ((Number(${trackOrder>/bill/subtotal}) || 0) * 0.05)
+                                            + ((Number(${trackOrder>/bill/subtotal}) || 0) &lt; 50 ? 20 : 0)
+                                            + ((Number(${trackOrder>/bill/subtotal}) || 0) * 0.95 * 0.05)
+                                        ).toFixed(2) }"
+                                        level="H4"/>
+                                </HBox>
+
+                                <Text
+                                    text="Inclusive of applicable charges and GST"
+                                    class="sapUiTinyMarginTop"
+                                    wrapping="true"/>
+
+                                <!-- PAYMENT METHOD -->
+                                <ObjectStatus
+                                    text="{= 'Paid via ' + (${trackOrder>/paymentMode} || 'Not specified') }"
+                                    icon="sap-icon://payment-approval"
+                                    state="Success"
+                                    class="sapUiSmallMarginTop"/>
+
+                            </VBox>
+                        </Panel>
+
+                    </FlexBox>
+                    <!-- END ITEMS + BILL SIDE BY SIDE -->
+
+</VBox>
+
+<!-- CUSTOMER RETURN REQUEST -->
+<VBox
+    visible="{= ${app>/role} === 'customer' &amp;&amp; ${app>/section} === 'customerReturnRequest' }"
+    width="100%"
+    class="biteDashSection"
+    renderType="Bare">
+
+    <Button
+        text="Back to My Orders"
+        icon="sap-icon://nav-back"
+        type="Transparent"
+        press=".onCancelReturnRequest"
+        class="sapUiSmallMarginBottom"/>
+
+    <Title
+        text="{= 'Request Return for Order #' + ${selectedOrder>/OrderID} }"
+        level="H1"/>
+
+    <ObjectStatus
+        title="Order Status"
+        text="{selectedOrder>/Status}"
+        state="Information"
+        class="sapUiSmallMarginBottom"/>
+
+    <Panel
+        headerText="Return Details"
+        expandable="false">
+
+        <content>
+            <VBox class="sapUiSmallMargin" renderType="Bare">
+
+                <Label
+                    text="Reason for Return"
+                    required="true"
+                    labelFor="returnReasonSelect"/>
+
+                <Select
+                    id="returnReasonSelect"
+                    width="100%"
+                    selectedKey="Damaged">
+
+                    <items>
+                        <core:Item key="Damaged" text="Item damaged"/>
+                        <core:Item key="Wrong Item" text="Wrong item delivered"/>
+                        <core:Item key="Missing Item" text="Item missing"/>
+                        <core:Item key="Quality Issue" text="Quality issue"/>
+                        <core:Item key="Other" text="Other"/>
+                    </items>
+                </Select>
+
+                <Label
+                    text="Additional Details"
+                    class="sapUiSmallMarginTop"
+                    labelFor="returnReasonDetails"/>
+
+                <TextArea
+                    id="returnReasonDetails"
+                    width="100%"
+                    rows="3"
+                    placeholder="Describe the issue (optional)"
+                    maxLength="500"/>
+
+                <ObjectNumber
+                    number="{selectedOrder>/Total}"
+                    unit="₹"
+                    emphasized="true"
+                    class="sapUiSmallMarginTop"/>
+
+                <Button
+                    text="Submit Return Request"
+                    icon="sap-icon://undo"
+                    type="Emphasized"
+                    width="100%"
+                    press=".onSubmitReturnRequest"
+                    class="sapUiSmallMarginTop"/>
+
+            </VBox>
+        </content>
+    </Panel>
+</VBox>
+
+
+
+<!--ABOUT RESTURANT CONTAINS DASHBOARD ORDERS MENU AND RETURNS-->
+<!-- ============ BUSINESS LAYOUT: SIDEBAR + CONTENT ============ -->
+<HBox
+    visible="{= ${app>/role} === 'business' }"
+    width="100%"
+    alignItems="Stretch"
+    renderType="Bare">
+
+    <!-- ===== SIDEBAR ===== -->
+    <VBox
+        width="14rem"
+        class="sapUiSmallMargin"
+        renderType="Bare">
+
+        <Title
+            text="BiteDash"
+            titleStyle="H4"
+            class="sapUiSmallMarginBottom sapUiTinyMarginBegin"/>
+
+        <Button
+            text="Home"
+            icon="sap-icon://home"
+            width="100%"
+            type="{= ${app>/section} === 'businessHome' ? 'Emphasized' : 'Transparent' }"
+            press=".onNavigate"
+            class="sapUiTinyMarginBottom">
+            <customData>
+                <core:CustomData key="section" value="businessHome"/>
+            </customData>
+        </Button>
+
+        <Button
+            text="Dashboard"
+            icon="sap-icon://bar-chart"
+            width="100%"
+            type="{= ${app>/section} === 'businessDashboard' ? 'Emphasized' : 'Transparent' }"
+            press=".onNavigate"
+            class="sapUiTinyMarginBottom">
+            <customData>
+                <core:CustomData key="section" value="businessDashboard"/>
+            </customData>
+        </Button>
+
+        <Button
+            text="{= 'Orders' + (${app>/incomingOrders} > 0 ? ' (' + ${app>/incomingOrders} + ')' : '') }"
+            icon="sap-icon://shipping-status"
+            width="100%"
+            type="{= ${app>/section} === 'businessOrders' ? 'Emphasized' : 'Transparent' }"
+            press=".onNavigate"
+            class="sapUiTinyMarginBottom">
+            <customData>
+                <core:CustomData key="section" value="businessOrders"/>
+            </customData>
+        </Button>
+
+        <Button
+            text="Menu"
+            icon="sap-icon://meal"
+            width="100%"
+            type="{= ${app>/section} === 'businessMenu' ? 'Emphasized' : 'Transparent' }"
+            press=".onNavigate"
+            class="sapUiTinyMarginBottom">
+            <customData>
+                <core:CustomData key="section" value="businessMenu"/>
+            </customData>
+        </Button>
+
+        <Button
+            text="{= 'Returns' + (${app>/returnCount} > 0 ? ' (' + ${app>/returnCount} + ')' : '') }"
+            icon="sap-icon://undo"
+            width="100%"
+            type="{= ${app>/section} === 'businessReturns' ? 'Emphasized' : 'Transparent' }"
+            press=".onNavigate">
+            <customData>
+                <core:CustomData key="section" value="businessReturns"/>
+            </customData>
+        </Button>
+    </VBox>
+
+    <!-- ===== CONTENT AREA ===== -->
+    <VBox renderType="Bare">
+        <layoutData>
+            <FlexItemData growFactor="1" minWidth="0"/>
+        </layoutData>
+
+        <!-- ===== BUSINESS HOME ===== -->
+        <VBox
+            visible="{= ${app>/section} === 'businessHome' }"
+            class="sapUiSmallMargin"
+            renderType="Bare">
+
+            <!-- GREETING -->
+            <Title text="{homeView>/greeting}" titleStyle="H2"/>
+            <Text
+                text="Here is what needs your attention"
+                class="sapUiSmallMarginBottom"/>
+
+            <!-- NEEDS ATTENTION -->
+            <Panel
+                headerText="Needs attention"
+                width="auto"
+                class="sapUiTinyMargin">
+                <List
+                    items="{homeView>/alerts}"
+                    showSeparators="Inner"
+                    noDataText="Nothing needs your attention right now">
+                    <CustomListItem>
+                        <HBox
+                            alignItems="Center"
+                            class="sapUiSmallMargin">
+
+                            <core:Icon
+                                src="{= ${homeView>kind} === 'orders' ? 'sap-icon://list'
+                                      : ${homeView>kind} === 'returns' ? 'sap-icon://undo'
+                                      : 'sap-icon://meal' }"
+                                size="1.5rem"
+                                color="{= ${homeView>kind} === 'orders' ? 'Default'
+                                      : ${homeView>kind} === 'returns' ? 'Critical'
+                                      : 'Negative' }"
+                                class="sapUiSmallMarginEnd"/>
+
+                            <VBox renderType="Bare">
+                                <layoutData>
+                                    <FlexItemData growFactor="1"/>
+                                </layoutData>
+                                <Title text="{homeView>title}" titleStyle="H5"/>
+                                <Text text="{homeView>subtitle}"/>
+                            </VBox>
+
+                            <Button
+                                text="{homeView>buttonText}"
+                                type="Transparent"
+                                press=".onHomeAlertPress"/>
+                        </HBox>
+                    </CustomListItem>
+                </List>
+            </Panel>
+
+            <!-- SUMMARY TILES -->
+            <FlexBox
+                width="100%"
+                wrap="Wrap"
+           
+                alignItems="Stretch"
+                class="sapUiSmallMarginTop">
+                                <HBox
+                    width="100%"
+                    wrap="Wrap"
+                    alignItems="Stretch"
+                    justifyContent="SpaceBetween">
+
+                    <Panel
+                        width="auto"
+                        class="sapUiTinyMargin">
+                        <layoutData>
+                            <FlexItemData
+                                growFactor="1"
+                                baseSize="0%"
+                                minWidth="10rem"/>
+                        </layoutData>
+
+                        <VBox class="sapUiSmallMargin">
+                            <Label text="Orders"/>
+                            <Title
+                                text="{homeView>/ordersToday}"
+                                titleStyle="H1"/>
+                        </VBox>
+                    </Panel>
+
+                    <Panel
+                        width="auto"
+                        class="sapUiTinyMargin">
+                        <layoutData>
+                            <FlexItemData
+                                growFactor="1"
+                                baseSize="0%"
+                                minWidth="10rem"/>
+                        </layoutData>
+
+                        <VBox class="sapUiSmallMargin">
+                            <Label text="Revenue"/>
+                            <Title
+                                text="₹{homeView>/revenue}"
+                                titleStyle="H1"/>
+                        </VBox>
+                    </Panel>
+
+                    <Panel
+                        width="auto"
+                        class="sapUiTinyMargin">
+                        <layoutData>
+                            <FlexItemData
+                                growFactor="1"
+                                baseSize="0%"
+                                minWidth="10rem"/>
+                        </layoutData>
+
+                        <VBox class="sapUiSmallMargin">
+                            <Label text="Rating"/>
+                            <HBox alignItems="Center">
+                                <Title
+                                    text="{homeView>/rating}"
+                                    titleStyle="H1"
+                                    class="sapUiSmallMarginEnd"/>
+                                <RatingIndicator
+                                    value="{homeView>/rating}"
+                                    maxValue="5"
+                                    iconSize="1rem"
+                                    displayOnly="true"/>
+                            </HBox>
+                        </VBox>
+                    </Panel>
+
+                </HBox>
+            </FlexBox>
+        </VBox>
+
+        <!-- ===== YOUR OTHER BUSINESS SECTIONS GO HERE ===== -->
+        <!-- Dashboard, Orders, Menu and Returns blocks, each keeps its own visible="..." -->
+
+
+
+<!-- BUSINESS DASHBOARD -->
+<HBox
+    visible="{= ${app>/role} === 'business' &amp;&amp; ${app>/section} === 'businessDashboard' }"
+    class="biteDashNavigation sapUiContentPadding"
+    justifyContent="Center"
+    width="100%">
+
+    <VBox width="100%" renderType="Bare">
+        <layoutData>
+            <FlexItemData growFactor="1" maxWidth="60rem"/>
+        </layoutData>
+
+        <!-- DASHBOARD HEADING -->
+        <Title
+            text="Restaurant Dashboard"
+            level="H1"
+            titleStyle="H3"/>
+
+        <Text
+            text="Welcome to your BiteDash business workspace."/>
+
+        <!-- DASHBOARD CARDS: 3 CARDS PER ROW -->
+        <grid:CSSGrid
+            gridTemplateColumns="repeat(3, minmax(0, 1fr))"
+            gridGap="1rem"
+            class="sapUiSmallMarginTop">
+
+            <!-- CARD 1: INCOMING ORDERS -->
+            <f:Card width="100%">
+                <f:content>
+                    <VBox
+                        width="100%"
+                        class="sapUiSmallMargin"
+                        renderType="Bare">
+
+                        <HBox
+                            width="100%"
+                            justifyContent="SpaceBetween"
+                            alignItems="Start">
+
+                            <VBox
+                                width="75%"
+                                renderType="Bare">
+
+                                <Title
+                                    text="Incoming Orders"
+                                    titleStyle="H5"/>
+
+                                <Text
+                                    text="Orders awaiting processing"
+                                    wrapping="true"/>
+                            </VBox>
+
+                            <core:Icon
+                                src="sap-icon://shipping-status"
+                                size="1.5rem"
+                                color="#1e3a8a"
+                                class="sapUiTinyMarginBegin"/>
+                        </HBox>
+
+                        <HBox
+                            alignItems="Center"
+                            class="sapUiMediumMarginTop">
+
+                            <core:Icon
+                                src="sap-icon://shipping-status"
+                                size="2rem"
+                                color="#1e3a8a"
+                                class="sapUiSmallMarginEnd"/>
+
+                            <Title
+                                text="{app>/incomingOrders}"
+                                titleStyle="H2"/>
+                        </HBox>
+                    </VBox>
+                </f:content>
+            </f:Card>
+
+            <!-- CARD 2: MENU ITEMS -->
+            <f:Card width="100%">
+                <f:content>
+                    <VBox
+                        width="100%"
+                        class="sapUiSmallMargin"
+                        renderType="Bare">
+
+                        <HBox
+                            width="100%"
+                            justifyContent="SpaceBetween"
+                            alignItems="Start">
+
+                            <VBox
+                                width="75%"
+                                renderType="Bare">
+
+                                <Title
+                                    text="Menu Items"
+                                    titleStyle="H5"/>
+
+                                <Text
+                                    text="Items available to order"
+                                    wrapping="true"/>
+                            </VBox>
+
+                            <core:Icon
+                                src="sap-icon://meal"
+                                size="1.5rem"
+                                color="#059669"
+                                class="sapUiTinyMarginBegin"/>
+                        </HBox>
+
+                        <HBox
+                            alignItems="Center"
+                            class="sapUiMediumMarginTop">
+
+                            <core:Icon
+                                src="sap-icon://meal"
+                                size="2rem"
+                                color="#059669"
+                                class="sapUiSmallMarginEnd"/>
+
+                            <Title
+                                text="{app>/menuCount}"
+                                titleStyle="H2"/>
+                        </HBox>
+                    </VBox>
+                </f:content>
+            </f:Card>
+
+            <!-- CARD 3: RETURNS -->
+            <f:Card width="100%">
+                <f:content>
+                    <VBox
+                        width="100%"
+                        class="sapUiSmallMargin"
+                        renderType="Bare">
+
+                        <HBox
+                            width="100%"
+                            justifyContent="SpaceBetween"
+                            alignItems="Start">
+
+                            <VBox
+                                width="75%"
+                                renderType="Bare">
+
+                                <Title
+                                    text="Returns"
+                                    titleStyle="H5"/>
+
+                                <Text
+                                    text="Requests to review"
+                                    wrapping="true"/>
+                            </VBox>
+
+                            <core:Icon
+                                src="sap-icon://undo"
+                                size="1.5rem"
+                                color="#6b7280"
+                                class="sapUiTinyMarginBegin"/>
+                        </HBox>
+
+                        <HBox
+                            alignItems="Center"
+                            class="sapUiMediumMarginTop">
+
+                            <core:Icon
+                                src="sap-icon://undo"
+                                size="2rem"
+                                color="#6b7280"
+                                class="sapUiSmallMarginEnd"/>
+
+                            <Title
+                                text="{app>/returnCount}"
+                                titleStyle="H2"/>
+                        </HBox>
+                    </VBox>
+                </f:content>
+            </f:Card>
+
+            <!-- CARD 4: PREPARING ORDERS -->
+            <f:Card width="100%">
+                <f:content>
+                    <VBox
+                        width="100%"
+                        class="sapUiSmallMargin"
+                        renderType="Bare">
+
+                        <HBox
+                            width="100%"
+                            justifyContent="SpaceBetween"
+                            alignItems="Start">
+
+                            <VBox
+                                width="75%"
+                                renderType="Bare">
+
+                                <Title
+                                    text="Preparing Orders"
+                                    titleStyle="H5"/>
+
+                                <Text
+                                    text="Currently being prepared"
+                                    wrapping="true"/>
+                            </VBox>
+
+                            <core:Icon
+                                src="sap-icon://pending"
+                                size="1.5rem"
+                                color="#92400e"
+                                class="sapUiTinyMarginBegin"/>
+                        </HBox>
+
+                        <HBox
+                            alignItems="Center"
+                            class="sapUiMediumMarginTop">
+
+                            <core:Icon
+                                src="sap-icon://pending"
+                                size="2rem"
+                                color="#92400e"
+                                class="sapUiSmallMarginEnd"/>
+
+                            <Title
+                                text="{app>/preparingOrders}"
+                                titleStyle="H2"/>
+                        </HBox>
+                    </VBox>
+                </f:content>
+            </f:Card>
+
+            <!-- CARD 5: DELIVERED ORDERS -->
+            <f:Card width="100%">
+                <f:content>
+                    <VBox
+                        width="100%"
+                        class="sapUiSmallMargin"
+                        renderType="Bare">
+
+                        <HBox
+                            width="100%"
+                            justifyContent="SpaceBetween"
+                            alignItems="Start">
+
+                            <VBox
+                                width="75%"
+                                renderType="Bare">
+
+                                <Title
+                                    text="Delivered Orders"
+                                    titleStyle="H5"/>
+
+                                <Text
+                                    text="Completed deliveries"
+                                    wrapping="true"/>
+                            </VBox>
+
+                            <core:Icon
+                                src="sap-icon://accept"
+                                size="1.5rem"
+                                color="#059669"
+                                class="sapUiTinyMarginBegin"/>
+                        </HBox>
+
+                        <HBox
+                            alignItems="Center"
+                            class="sapUiMediumMarginTop">
+
+                            <core:Icon
+                                src="sap-icon://accept"
+                                size="2rem"
+                                color="#059669"
+                                class="sapUiSmallMarginEnd"/>
+
+                            <Title
+                                text="{app>/deliveredOrders}"
+                                titleStyle="H2"/>
+                        </HBox>
+                    </VBox>
+                </f:content>
+            </f:Card>
+
+        </grid:CSSGrid>
+
+        <!-- QUICK ACTIONS -->
+        <Title
+            text="Quick Actions"
+            level="H2"
+            class="sapUiSmallMarginTop"/>
+
+        <grid:CSSGrid
+            gridTemplateColumns="repeat(2, minmax(0, 1fr))"
+            gridGap="1rem"
+            class="sapUiTinyMarginTop">
+
+            <Button
+                text="View Orders"
+                icon="sap-icon://shipping-status"
+                press=".onOpenBusinessOrders"
+                width="100%"/>
+
+            <Button
+                text="Manage Menu"
+                icon="sap-icon://meal"
+                press=".onOpenBusinessMenu"
+                width="100%"/>
+
+        </grid:CSSGrid>
+
+    </VBox>
+</HBox>
+
+<!-- RESTAURANT ORDER MANAGEMENT -->
+<HBox
+    visible="{= ${app>/role} === 'business' &amp;&amp; ${app>/section} === 'businessOrders' }"
+    class="biteDashOrdersCompact sapUiContentPadding"
+    justifyContent="Center"
+    width="100%">
+
+    <VBox width="100%" renderType="Bare">
+        <layoutData>
+            <FlexItemData growFactor="1" maxWidth="70rem"/>
+        </layoutData>
+
+        <!-- HEADER ROW -->
+        <HBox alignItems="Center" width="100%">
+            <VBox renderType="Bare">
+                <layoutData>
+                    <FlexItemData growFactor="1"/>
+                </layoutData>
+                <Title text="Restaurant Orders" level="H1" titleStyle="H3"/>
+                <Text text="Review incoming orders and update their preparation and delivery status."/>
+            </VBox>
+                        <Button
+                text="Delete Order"
+                icon="sap-icon://delete"
+                type="Reject"
+                press=".onDeleteSelectedOrder"
+                enabled="{= !!${selectedOrder>/OrderID} }"
+                class="sapUiTinyMarginEnd" />
+        
+            <Button text="Refresh Orders" icon="sap-icon://refresh" press=".onRefreshOrders">
+                <layoutData>
+                    <FlexItemData growFactor="0" shrinkFactor="0"/>
+                </layoutData>
+            </Button>
+        </HBox>
+
+        <!-- TWO COLUMNS -->
+        <grid:CSSGrid
+            gridTemplateColumns="minmax(0, 3fr) minmax(0, 2fr)"
+            gridGap="1rem"
+            class="sapUiSmallMarginTop">
+
+            <!-- LEFT: ORDER LIST -->
+            <List
+                id="businessOrdersList"
+                items="{orderData>/items}"
+                mode="SingleSelectMaster"
+                selectionChange=".onOrderSelect"
+                noDataText="No incoming orders yet."
+                showSeparators="Inner"
+                width="100%">
+
+                <CustomListItem>
+                    <HBox alignItems="Center" class="sapUiSmallMargin">
+
+                        <!-- Status icon + vertical line -->
+                        <VBox alignItems="Center" renderType="Bare" class="sapUiSmallMarginEnd">
+                            <layoutData>
+                                <FlexItemData growFactor="0" shrinkFactor="0" alignSelf="Stretch"/>
+                            </layoutData>
+                            <core:Icon
+                                src="{= ${orderData>Status} === 'Delivered' ? 'sap-icon://sys-enter-2'
+                                      : ${orderData>Status} === 'Preparing' ? 'sap-icon://pending'
+                                      : ${orderData>Status} === 'Cancelled' ? 'sap-icon://sys-cancel-2'
+                                      : 'sap-icon://shipping-status' }"
+                                size="1.5rem"
+                                width="2rem"
+                                color="{= ${orderData>Status} === 'Delivered' ? '#16a34a'
+                                       : ${orderData>Status} === 'Preparing' ? '#d97706'
+                                       : ${orderData>Status} === 'Cancelled' ? '#dc2626'
+                                       : '#2563eb' }"/>
+                            <core:HTML content="&lt;div style='width:2px;height:2rem;background:#6b7280'&gt;&lt;/div&gt;"/>
+                        </VBox>
+
+                        <!-- Order info -->
+                        <VBox renderType="Bare">
+                            <layoutData>
+                                <FlexItemData growFactor="1" shrinkFactor="1"/>
+                            </layoutData>
+
+                            <HBox alignItems="Center">
+                                <Title text="{= 'Order #' + ${orderData>OrderID} }" titleStyle="H5"/>
+                                <ObjectStatus
+                                    text="{orderData>Status}"
+                                    class="sapUiTinyMarginBeginEnd"
+                                    state="{= ${orderData>Status} === 'Delivered' ? 'Success'
+                                            : ${orderData>Status} === 'Preparing' ? 'Warning'
+                                            : ${orderData>Status} === 'Cancelled' ? 'Error'
+                                            : 'Information' }"/>
+                                <Text text="{path: 'orderData>CreatedAt', formatter: '.formatAgo'}"/>
+                            </HBox>
+
+                            <Text
+                                text="{= 'Customer: ' + ${orderData>CustomerName} + '  •  Delivery: ' + ${orderData>Address} }"
+                                wrapping="true"/>
+
+                            <Text
+                                text="{= ${orderData>ItemSummary} + '  •  ₹' + ${orderData>Total} }"
+                                wrapping="true"/>
+                        </VBox>
+
+                        <!-- Status badge -->
+                        <ObjectStatus
+                            text="{orderData>Status}"
+                            inverted="true"
+                            class="sapUiSmallMarginBegin"
+                            state="{= ${orderData>Status} === 'Delivered' ? 'Success'
+                                    : ${orderData>Status} === 'Preparing' ? 'Warning'
+                                    : ${orderData>Status} === 'Cancelled' ? 'Error'
+                                    : 'Information' }">
+                            <layoutData>
+                                <FlexItemData growFactor="0" shrinkFactor="0"/>
+                            </layoutData>
+                        </ObjectStatus>
+
+                    </HBox>
+                </CustomListItem>
+            </List>
+            <!-- RIGHT: SELECTED ORDER DETAILS -->
+            <VBox width="100%" renderType="Bare">
+
+                <!-- Empty state -->
+                <VBox
+                    visible="{= !${selectedOrder>/OrderID} }"
+                    width="100%"
+                    alignItems="Center"
+                    class="sapUiLargeMarginTop"
+                    renderType="Bare">
+                    <core:Icon src="sap-icon://receipt" size="3rem" color="#64748b"/>
+                    <Title text="Order Details" titleStyle="H4" class="sapUiSmallMarginTop"/>
+                    <Text text="Select an order from the list to view its details."
+                        textAlign="Center" wrapping="true"/>
+                </VBox>
+
+                <!-- Selected order -->
+                <VBox
+                    visible="{= !!${selectedOrder>/OrderID} }"
+                    width="100%"
+                    renderType="Bare">
+
+                    <!-- 1. SUMMARY -->
+                    <Panel width="100%">
+                        <headerToolbar>
+                            <Toolbar>
+                                <core:Icon src="sap-icon://receipt" size="1.25rem"/>
+                                <Title text="{= 'Order #' + ${selectedOrder>/OrderID} }" titleStyle="H4"/>
+                                <ToolbarSpacer/>
+                                <ObjectStatus
+                                    text="{selectedOrder>/Status}"
+                                    inverted="true"
+                                    state="{= ${selectedOrder>/Status} === 'Delivered' ? 'Success'
+                                            : ${selectedOrder>/Status} === 'Cancelled' ? 'Error'
+                                            : ${selectedOrder>/Status} === 'Preparing' || ${selectedOrder>/Status} === 'Packed' ? 'Warning'
+                                            : 'Information' }"/>
+                            </Toolbar>
+                        </headerToolbar>
+                        <VBox renderType="Bare">
+                            <ObjectAttribute title="Customer" text="{selectedOrder>/CustomerName}"/>
+                            <ObjectAttribute title="Delivery" text="{selectedOrder>/Address}"/>
+                        </VBox>
+                    </Panel>
+
+                    <!-- 2. PROGRESS -->
+                    <Panel width="100%" class="sapUiTinyMarginTop">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Progress" titleStyle="H5"/>
+                            </Toolbar>
+                        </headerToolbar>
+
+                        <HBox width="100%" justifyContent="SpaceAround">
+
+                            <VBox alignItems="Center" renderType="Bare">
+                                <layoutData><FlexItemData growFactor="1" baseSize="0"/></layoutData>
+                                <core:Icon
+                                    src="sap-icon://pending"
+                                    size="1.75rem"
+                                    color="{= ['Preparing', 'Packed', 'Picked Up', 'On The Way', 'Delivered'].indexOf(${selectedOrder>/Status}) >= 0 ? '#d97706' : '#9ca3af' }"/>
+                                <Text text="Preparing" class="sapUiTinyMarginTop"/>
+                            </VBox>
+
+                            <VBox alignItems="Center" renderType="Bare">
+                                <layoutData><FlexItemData growFactor="1" baseSize="0"/></layoutData>
+                                <core:Icon
+                                    src="sap-icon://shipping-status"
+                                    size="1.75rem"
+                                    color="{= ['Picked Up', 'On The Way', 'Delivered'].indexOf(${selectedOrder>/Status}) >= 0 ? '#2563eb' : '#9ca3af' }"/>
+                                <Text text="Dispatched" class="sapUiTinyMarginTop"/>
+                            </VBox>
+
+                            <VBox alignItems="Center" renderType="Bare">
+                                <layoutData><FlexItemData growFactor="1" baseSize="0"/></layoutData>
+                                <core:Icon
+                                    src="sap-icon://sys-enter-2"
+                                    size="1.75rem"
+                                    color="{= ${selectedOrder>/Status} === 'Delivered' ? '#16a34a' : '#9ca3af' }"/>
+                                <Text text="Delivered" class="sapUiTinyMarginTop"/>
+                            </VBox>
+
+                        </HBox>
+
+                        <MessageStrip
+                            visible="{= ${selectedOrder>/Status} === 'Cancelled' }"
+                            text="This order has been cancelled."
+                            type="Error"
+                            showIcon="true"
+                            class="sapUiSmallMarginTop"/>
+                    </Panel>
+
+                    <!-- 3. ORDER ITEMS -->
+                    <Panel width="100%" class="sapUiTinyMarginTop">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Order Items" titleStyle="H5"/>
+                            </Toolbar>
+                        </headerToolbar>
+
+                        <HBox alignItems="Center" width="100%">
+                            <core:Icon src="sap-icon://meal" size="1.5rem" color="#059669"
+                                class="sapUiSmallMarginEnd"/>
+                            <Text text="{selectedOrder>/ItemSummary}" wrapping="true">
+                                <layoutData><FlexItemData growFactor="1"/></layoutData>
+                            </Text>
+                          <!--  <ObjectNumber
+                                number="{path: 'selectedOrder>/Total', formatOptions: { minFractionDigits: 2, maxFractionDigits: 2 }}"
+                                unit="₹"
+                                emphasized="true"/>-->
+                                <ObjectNumber
+                                    number="{= '₹' + Number(${selectedOrder>/Total} || 0).toFixed(2) }"
+                                    emphasized="true"/>
+                        </HBox>
+                    </Panel>
+
+                    <!-- 4. COURIER STATUS -->
+                    <Panel width="100%" class="sapUiTinyMarginTop">
+                        <headerToolbar>
+                            <Toolbar>
+                                <Title text="Courier Status" titleStyle="H5"/>
+                            </Toolbar>
+                        </headerToolbar>
+
+                        <HBox alignItems="Center">
+                            <core:Icon src="sap-icon://map-2" size="2.5rem" color="#2563eb"
+                                class="sapUiSmallMarginEnd"/>
+                            <VBox renderType="Bare">
+                                <Title text="{selectedOrder>/Address}" titleStyle="H5"/>
+                                <Text text="{= 'Delivering to ' + (${selectedOrder>/CustomerName} || 'Customer') }"/>
+                            </VBox>
+                        </HBox>
+                    </Panel>
+
+                    <!-- 5. ACTIONS -->
+                    <VBox width="100%" renderType="Bare" class="sapUiSmallMarginTop">
+                        <Button
+                            text="Completed &amp; Dispatch"
+                            icon="sap-icon://shipping-status"
+                            type="Emphasized"
+                            width="100%"
+                            enabled="{= ${selectedOrder>/Status} !== 'Delivered' &amp;&amp; ${selectedOrder>/Status} !== 'Cancelled' }"
+                            press=".onAdvanceSelectedOrderStatus"/>
+                        <Button
+                            text="Delay / Flag"
+                            icon="sap-icon://flag"
+                            width="100%"
+                            class="sapUiTinyMarginTop"
+                            press=".onFlagOrder"/>
+                    </VBox>
+
+                </VBox>
+            </VBox>
+
+        </grid:CSSGrid>
+    </VBox>
+</HBox>
+
+<!-- BUSINESS MENU -->
+<VBox
+    visible="{= ${app>/role} === 'business' &amp;&amp; ${app>/section} === 'businessMenu' }"
+    class="sapUiSmallMargin"
+    renderType="Bare">
+
+    <!-- HEADER -->
+    <FlexBox
+        width="100%"
+        alignItems="Center"
+        justifyContent="SpaceBetween"
+        wrap="Wrap">
+        <VBox renderType="Bare">
+            <Title text="Restaurant Menu" titleStyle="H2"/>
+            <Text text="{app>/menuCount} menu items"/>
+        </VBox>
+        <HBox alignItems="Center">
+          
+                <SearchField
+                        id="businessMenuSearchField"
+                        width="16rem"
+                        placeholder="Search dishes"
+                        liveChange=".onBusinessMenuSearch"
+                        search=".onBusinessMenuSearch"
+                        class="sapUiTinyMarginEnd"/>
+            <Button
+                icon="sap-icon://refresh"
+                tooltip="Refresh menu"
+                press=".onRefreshMenu"
+                class="sapUiTinyMarginEnd"/>
+            <Button
+                text="Add Item"
+                icon="sap-icon://add"
+                type="Emphasized"
+                press=".onShowAddMenuItem"/>
+        </HBox>
+    </FlexBox>
+
+    <!-- CATEGORY FILTER -->
+    <SegmentedButton
+        selectedKey="all"
+        selectionChange=".onMenuCategoryFilter"
+        class="sapUiSmallMarginTop">
+        <items>
+            <SegmentedButtonItem key="all" text="All"/>
+            <SegmentedButtonItem key="Food" text="Food"/>
+            <SegmentedButtonItem key="Beverages" text="Beverages"/>
+            <SegmentedButtonItem key="Electronics" text="Electronics"/>
+           <!-- <SegmentedButtonItem key="Desserts" text="Desserts"/>
+            <SegmentedButtonItem key="Drinks" text="Drinks"/>-->
+        </items>
+    </SegmentedButton>
+
+    <!-- KEEP YOUR EXISTING "Add New Menu Item" PANEL HERE (id="addMenuItemPanel") -->
+    
+
+                <!-- ADD NEW MENU ITEM PANEL -->
+                <Panel
+                    id="addMenuItemPanel"
+                    headerText="Add New Menu Item"
+                    expandable="true"
+                    expanded="false"
+                    visible="true"
+                    width="100%"
+                    class="sapUiSmallMarginTop">
+
+                    <VBox
+                        class="sapUiSmallMargin"
+                        renderType="Bare">
+                        <!-- CATEGORY -->
+                <Label
+                    text="Category"
+                    required="true"
+                    class="sapUiSmallMarginTop"/>
+
+                <Select
+                    id="menuItemCategory"
+                    width="100%"
+                    selectedKey="Food">
+                    <core:Item key="Food" text="Food"/>
+                    <core:Item key="Beverages" text="Beverages"/>
+                    <core:Item key="Electronics" text="Electronics"/>
+                </Select>
+
+        <!-- FOOD NAME -->
+        <Label
+            text="Food Name"
+            required="true"
+            labelFor="menuItemName"/>
+
+        <Input
+            id="menuItemName"
+            placeholder="Enter food name"
+            width="100%"
+            maxLength="100"/>
+
+        <!-- DESCRIPTION -->
+        <Label
+            text="Description"
+            labelFor="menuItemDescription"
+            class="sapUiSmallMarginTop"/>
+
+        <TextArea
+            id="menuItemDescription"
+            placeholder="Enter food description"
+            width="100%"
+            rows="3"
+            maxLength="500"/>
+
+        <!-- RATING -->
+        <Label
+            text="Rating"
+            class="sapUiSmallMarginTop"/>
+        <RatingIndicator
+                id="menuItemRating"
+                maxValue="5"
+                value="0"
+                enabled="true"
+                iconSize="1rem"/>
+       <!-- <Text
+            text="Rating will be displayed after customers rate this item."/>-->
+
+        <!-- PRICE -->
+        <Label
+            text="Price (₹)"
+            required="true"
+            labelFor="menuItemPrice"
+            class="sapUiSmallMarginTop"/>
+
+        <Input
+            id="menuItemPrice"
+            placeholder="Enter price"
+            type="Number"
+            width="100%"/>
+
+        <!-- SAVE BUTTON -->
+        <HBox
+            justifyContent="End"
+            class="sapUiSmallMarginTop">
+
+            <Button
+                text="Save Menu Item"
+                icon="sap-icon://save"
+                type="Emphasized"
+                press=".onCreateMenuItem"/>
+
+        </HBox>
+
+    </VBox>
+        </Panel>
+
+
+    <!-- MENU CARDS -->
+    <FlexBox
+        id="businessMenuList"
+        items="{products>/items}"
+        width="100%"
+        wrap="Wrap"
+        alignItems="Stretch"
+        class="sapUiSmallMarginTop">
+        <Panel >
+            <layoutData>
+                <FlexItemData growFactor="0" baseSize="28%" styleClass="sapUiSmallMargin"/>
+            </layoutData>
+            <VBox renderType="Bare" justifyContent="SpaceBetween" height="100%">
+
+                <!-- NAME + STATUS -->
+                <HBox justifyContent="SpaceBetween" alignItems="Start">
+                    <Title text="{products>Name}" titleStyle="H4" wrapping="true"/>
+                    <ObjectStatus
+                        text="{= ${products>Available} !== false ? 'Available' : 'Unavailable' }"
+                        state="{= ${products>Available} !== false ? 'Success' : 'Error' }"
+                        inverted="true"/>
+                </HBox>
+
+                <!-- CATEGORY -->
+                <Label
+                    text="{= ${products>Category} || 'General' }"
+                    class="sapUiTinyMarginTop"/>
+
+                <!-- DESCRIPTION (max 2 lines keeps all cards equal) -->
+                <Text
+                    text="{products>Description}"
+                    maxLines="2"
+                    class="sapUiSmallMarginTop"/>
+
+                <!-- PRICE + RATING -->
+                <HBox
+                    justifyContent="SpaceBetween"
+                    alignItems="Center"
+                    class="sapUiSmallMarginTop">
+                    <Title text="₹{products>Price}" titleStyle="H3"/>
+                    <RatingIndicator
+                        value="{products>Rating}"
+                        maxValue="5"
+                        iconSize="0.9rem"
+                        displayOnly="true"
+                        visible="{= ${products>Rating} > 0 }"/>
+                </HBox>
+
+                <!-- ACTIONS -->
+                <HBox
+                    justifyContent="SpaceBetween"
+                    alignItems="Center"
+                    class="sapUiSmallMarginTop">
+                    <Switch
+                        state="{= ${products>Available} !== false }"
+                        change=".onToggleAvailable"
+                        tooltip="Available for ordering"/>
+                    <HBox>
+                        <Button
+                            icon="sap-icon://edit"
+                            type="Transparent"
+                            tooltip="Edit"
+                            press=".onEditMenuItem"/>
+                        <Button
+                            icon="sap-icon://delete"
+                            type="Transparent"
+                            tooltip="Delete"
+                            press=".onDeleteMenuItem"/>
+                    </HBox>
+                </HBox>
+            </VBox>
+        </Panel>
+    </FlexBox>
+</VBox>
+
+   
+<!-- BUSINESS RETURNS -->
+<VBox
+    visible="{= ${app>/role} === 'business' &amp;&amp; ${app>/section} === 'businessReturns' }"
+    class="biteDashSection sapUiContentPadding"
+    renderType="Bare">
+
+    <!-- HEADER + SEARCH -->
+    <HBox alignItems="Center" justifyContent="SpaceBetween" wrap="Wrap"
+          class="sapUiSmallMarginBottom">
+        <VBox>
+            <Title text="Return Management" level="H1"/>
+            <Text text="Review requests, manage pickups, complete refunds"/>
+        </VBox>
+        <SearchField
+            width="16rem"
+            placeholder="Search order or customer"
+            liveChange=".onReturnSearch"/>
+    </HBox>
+
+    <!-- SUMMARY TILES -->
+    <HBox wrap="Wrap" class="sapUiSmallMarginBottom">
+        <GenericTile header="Open returns" frameType="TwoByHalf"
+                     class="sapUiTinyMarginEnd sapUiTinyMarginBottom">
+            <TileContent>
+                <NumericContent value="{returnsView>/open}" withMargin="false"/>
+            </TileContent>
+        </GenericTile>
+        <GenericTile header="Awaiting pickup" frameType="TwoByHalf"
+                     class="sapUiTinyMarginEnd sapUiTinyMarginBottom">
+            <TileContent>
+                <NumericContent value="{returnsView>/awaitingPickup}"
+                                valueColor="Critical" withMargin="false"/>
+            </TileContent>
+        </GenericTile>
+        <GenericTile header="Refunded" frameType="TwoByHalf"
+                     class="sapUiTinyMarginEnd sapUiTinyMarginBottom">
+            <TileContent>
+                <NumericContent value="{returnsView>/refunded}"
+                                valueColor="Good" withMargin="false"/>
+            </TileContent>
+        </GenericTile>
+        <GenericTile header="Refund value (₹)" frameType="TwoByHalf"
+                     class="sapUiTinyMarginBottom">
+            <TileContent>
+                <NumericContent value="{returnsView>/refundValue}" withMargin="false"/>
+            </TileContent>
+        </GenericTile>
+    </HBox>
+
+    <!-- FILTER TABS -->
+    <IconTabBar selectedKey="all" expandable="false" headerMode="Inline"
+                select=".onReturnFilter">
+        <items>
+            <IconTabFilter key="all" text="All" count="{returnsView>/all}"/>
+            <IconTabFilter key="needs" text="Needs action" count="{returnsView>/needs}"/>
+            <IconTabFilter key="pickup" text="In pickup" count="{returnsView>/inPickup}"/>
+            <IconTabFilter key="refunded" text="Refunded" count="{returnsView>/refunded}"/>
+            <IconTabFilter key="rejected" text="Rejected" count="{returnsView>/rejected}"/>
+        </items>
+    </IconTabBar>
+
+   
+
+        <!-- RETURNS TABLE -->
+    <Table
+        id="businessReturnsList"
+        items="{returnData>/items}"
+        noDataText="No return requests yet."
+        growing="true"
+        growingThreshold="10"
+        updateFinished=".onReturnsUpdateFinished">
+
+                <columns>
+                <Column width="17%"><Text text="Order"/></Column>
+                <Column width="11%" minScreenWidth="Tablet" demandPopin="true">
+                    <Text text="Customer"/>
+                </Column>
+                <Column width="13%" minScreenWidth="Tablet" demandPopin="true">
+                    <Text text="Item"/>
+                </Column>
+                <Column width="16%" minScreenWidth="Desktop" demandPopin="true">
+                    <Text text="Reason"/>
+                </Column>
+                <Column width="9%" hAlign="End"><Text text="Refund"/></Column>
+
+                <Column width="12%"><Text text="Status"/></Column>
+            <Column width="22%" hAlign="Begin"><Text text="Action"/></Column>
+            <Column minScreenWidth="99999px" demandPopin="true" popinDisplay="WithoutHeader">
+                <Text text="Tracking"/>
+            </Column>
+                </columns>
+                    <items>
+            <ColumnListItem type="Inactive" press=".onToggleReturn"
+                highlight="{= ${returnData>expanded} ? 'Information' : 'None' }">
+                <cells>
+                    <ObjectIdentifier
+                        title="{= 'Order #' + ${returnData>OrderID} }"
+                        text="{returnData>ReturnRequestDate}"/>
+
+                    <Text text="{returnData>CustomerName}"/>
+
+                    <Text text="{returnData>ItemSummary}"/>
+
+                    <Text text="{returnData>ReturnReason}"/>
+
+                    <ObjectNumber
+                        number="{returnData>RefundAmount}"
+                        unit="₹"
+                        emphasized="true"/>
+
+                    <ObjectStatus
+                        text="{returnData>ReturnStatus}"
+                        inverted="true"
+                        state="{= ${returnData>ReturnStatus} === 'Rejected' ? 'Error'
+                               : ${returnData>ReturnStatus} === 'Refunded' ? 'Success'
+                               : ${returnData>ReturnStatus} === 'Requested' ? 'Warning'
+                               : 'Information' }"/>
+
+                    <!-- Only the next valid action shows in each row -->
+                    <HBox justifyContent="End">
+                        <Button text="Approve" type="Accept"
+                                visible="{= ${returnData>ReturnStatus} === 'Requested' }"
+                                press=".onApproveReturn"
+                                class="sapUiTinyMarginEnd"/>
+                        <Button text="Reject" type="Reject"
+                                visible="{= ${returnData>ReturnStatus} === 'Requested' }"
+                                press=".onRejectReturn"/>
+                        <Button text="Schedule Pickup" type="Emphasized"
+                                visible="{= ${returnData>ReturnStatus} === 'Approved' }"
+                                press=".onScheduleReturnPickup"/>
+                        <Button text="Mark Picked Up" type="Emphasized"
+                                visible="{= ${returnData>ReturnStatus} === 'Pickup Scheduled' }"
+                                press=".onMarkReturnPickedUp"/>
+                        <Button text="Complete Refund" type="Emphasized"
+                                visible="{= ${returnData>ReturnStatus} === 'Picked Up' }"
+                                press=".onCompleteReturnRefund"/>
+                    </HBox>
+                    <VBox visible="{= !!${returnData>expanded} }" class="sapUiSmallMarginBottom">
+
+                        <!-- Details in columns -->
+                        <HBox wrap="Wrap">
+                            <VBox class="sapUiMediumMarginEnd sapUiSmallMarginBottom">
+                                <Label text="Customer"/>
+                                <Text text="{returnData>CustomerName}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd sapUiSmallMarginBottom">
+                                <Label text="Requested"/>
+                                <Text text="{returnData>ReturnRequestDate}"/>
+                            </VBox>
+                            <VBox class="sapUiMediumMarginEnd sapUiSmallMarginBottom">
+                                <Label text="Item"/>
+                                <Text text="{returnData>ItemSummary}"/>
+                            </VBox>
+                            <VBox class="sapUiSmallMarginBottom">
+                                <Label text="Refund amount"/>
+                                <ObjectNumber number="{returnData>RefundAmount}" unit="₹" emphasized="true"/>
+                            </VBox>
+                        </HBox>
+
+                        <Text text="{returnData>ReturnDetails}" wrapping="true"
+                            visible="{= !!${returnData>ReturnDetails} }"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <!-- Tracking (hidden for rejected returns) -->
+                        <VBox visible="{= ${returnData>ReturnStatus} !== 'Rejected' }">
+                            <ProgressIndicator
+                                showValue="false"
+                                height="0.5rem"
+                                state="{= ${returnData>ReturnStatus} === 'Refunded' ? 'Success' : 'Information' }"
+                                percentValue="{= ${returnData>ReturnStatus} === 'Requested' ? 20
+                                            : ${returnData>ReturnStatus} === 'Approved' ? 40
+                                            : ${returnData>ReturnStatus} === 'Pickup Scheduled' ? 60
+                                            : ${returnData>ReturnStatus} === 'Picked Up' ? 80
+                                            : ${returnData>ReturnStatus} === 'Refunded' ? 100 : 0 }"/>
+
+                            <HBox justifyContent="SpaceBetween" wrap="Wrap" class="sapUiTinyMarginTop">
+                                <VBox>
+                                    <ObjectStatus text="Requested" state="Success"/>
+                                    <Text text="{returnData>ReturnRequestDate}"/>
+                                </VBox>
+                                <ObjectStatus text="Approved"
+                                    state="{= ${returnData>ReturnStatus} === 'Requested' ? 'None' : 'Success' }"/>
+                                <ObjectStatus text="Pickup scheduled"
+                                    state="{= ${returnData>ReturnStatus} === 'Pickup Scheduled'
+                                        || ${returnData>ReturnStatus} === 'Picked Up'
+                                        || ${returnData>ReturnStatus} === 'Refunded' ? 'Success' : 'None' }"/>
+                                <ObjectStatus text="Picked up"
+                                    state="{= ${returnData>ReturnStatus} === 'Picked Up'
+                                        || ${returnData>ReturnStatus} === 'Refunded' ? 'Success' : 'None' }"/>
+                                <ObjectStatus text="Refunded"
+                                    state="{= ${returnData>ReturnStatus} === 'Refunded' ? 'Success' : 'None' }"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+
+</VBox>
+    </VBox>
+</HBox>
+
+            </VBox>
+        </content>
+    </Page>
+    
+</mvc:View>

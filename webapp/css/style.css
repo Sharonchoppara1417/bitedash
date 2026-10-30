@@ -1,0 +1,9 @@
+
+/* Green order tracking lane headers */
+.biteDashGreenTracking .sapSuiteUiCommonsProcessFlowLaneHeader {
+    color: #16a34a !important;
+}
+
+.biteDashGreenTracking .sapSuiteUiCommonsProcessFlowLaneHeader .sapUiIcon {
+    color: #16a34a !important;
+}
