@@ -107,7 +107,7 @@
         "async": true,
         "viewPath": "bitedash.bitedash.view"
       },
-      "routes": [
+       "routes": [
         {
           "name": "RouteView1",
           "pattern": ":?query:",
@@ -123,6 +123,8 @@
         }
       }
     },
+      
+
     "rootView": {
       "viewName": "bitedash.bitedash.view.App",
       "type": "XML",

@@ -1,9 +1,725 @@
-
-/* Green order tracking lane headers */
-.biteDashGreenTracking .sapSuiteUiCommonsProcessFlowLaneHeader {
-    color: #16a34a !important;
+.customerHomeContainer{
+    background:#f8fafc;
+    padding:1.5rem;
 }
 
-.biteDashGreenTracking .sapSuiteUiCommonsProcessFlowLaneHeader .sapUiIcon {
-    color: #16a34a !important;
+/* HERO */
+
+.heroBanner{
+    background:linear-gradient(
+        135deg,
+        #ff6b35,
+        #ff914d
+    );
+
+    border-radius:28px;
+    padding:2.5rem 3rem;
+    min-height:180px;
+    margin-bottom:2rem;
+
+    box-shadow:
+        0 12px 30px rgba(255,107,53,.20);
+}
+
+.heroTitle{
+    color:white !important;
+    font-size:3rem !important;
+    font-weight:800 !important;
+}
+
+.heroSubtitle{
+    color:white !important;
+    font-size:1.1rem;
+}
+
+.heroSearch{
+    max-width:650px;
+}
+
+/* SECTION */
+
+.sectionTitle{
+    margin-top:2rem !important;
+    margin-bottom:1rem !important;
+    font-weight:700 !important;
+}
+
+/* OFFERS */
+
+.offerCard{
+    width:240px;
+    height:130px;
+
+    margin:1rem;
+
+    padding:1rem;
+
+    border-radius:20px;
+
+    align-items:center;
+    justify-content:center;
+
+    box-shadow:
+        0 6px 16px rgba(0,0,0,.08);
+
+    transition:.3s ease;
+}
+
+.offerCard:hover{
+    transform:translateY(-4px);
+}
+
+.offerOrange{
+    background:#FFE8D6;
+}
+
+.offerGreen{
+    background:#DCFCE7;
+}
+
+.offerRed{
+    background:#FEE2E2;
+}
+.offerCard .sapMTitle{
+    font-size:1.25rem !important;
+    font-weight:700 !important;
+}
+
+/* WELCOME */
+
+.welcomeCard{
+    background:#ffffff;
+
+    border-radius:24px;
+
+    padding:1.5rem;
+
+    margin-top:2rem;
+    margin-bottom:2rem;
+
+    box-shadow:
+        0 8px 24px rgba(0,0,0,.08);
+}
+
+/* QUICK ACTIONS */
+
+.actionCard{
+    width:280px;
+    min-height:170px;
+
+    margin:1rem;
+
+    padding:1.5rem;
+
+    background:white;
+
+    border-radius:20px;
+
+    text-align:center;
+
+    box-shadow:
+        0 8px 24px rgba(0,0,0,.06);
+
+    transition:.3s ease;
+     display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.actionCard:hover{
+    transform:translateY(-6px);
+}
+.actionCard .sapUiIcon{
+    margin-bottom:.5rem;
+}
+
+
+/* CTA */
+
+.orderNowCard{
+
+     background:
+    linear-gradient(
+        135deg,
+        #ffffff,
+        #fff7ed
+    );
+
+    border-radius:24px;
+
+    padding:2rem;
+
+    margin-top:2rem;
+
+    box-shadow:
+        0 8px 24px rgba(0,0,0,.08);
+}
+.customerMenuContainer{
+    background:#f8fafc;
+}
+
+/* HEADER */
+
+.menuHeaderToolbar{
+    background:white;
+    border-radius:20px;
+    margin-bottom:1rem;
+
+    box-shadow:
+    0 4px 16px rgba(0,0,0,.05);
+}
+
+/* FILTER PANEL */
+
+.filterPanel{
+    border-radius:20px;
+    margin-bottom:1rem;
+
+    box-shadow:
+    0 4px 16px rgba(0,0,0,.05);
+}
+
+/* SEARCH */
+
+.modernSearch{
+    max-width:350px;
+}
+
+/* CATEGORY BUTTONS */
+
+.categoryButton{
+    border-radius:999px !important;
+}
+
+.categoryButton:hover{
+    background:#eef6ff;
+}
+
+/* TABLE */
+
+.menuTable{
+    background:white;
+    border-radius:20px;
+    overflow:hidden;
+
+    box-shadow:
+    0 4px 20px rgba(0,0,0,.05);
+}
+
+/* ROW HOVER */
+
+.sapMListTblRow:hover{
+    background:#f8fafc;
+}
+
+/* PRICE */
+
+
+.priceValue{
+    color:#16A34A !important;
+    font-weight:700;
+    font-size:1rem;
+}
+
+/* TABLE HEADER */
+
+.sapMListTblHeaderCell{
+    background:#f8fafc;
+    font-weight:700;
+}
+.categorySelected{
+    background:#EFF6FF;
+    color:#2563EB;
+    border-radius:999px;
+}
+.sapMBtnEmphasized{
+    border-radius:12px;
+}
+.sapMListTblRow{
+    height:56px;
+}
+
+
+#cartOrderSummary{
+    border-radius:20px;
+
+    box-shadow:
+    0 8px 24px rgba(0,0,0,.08);
+}
+/* CART */
+
+.cartItemCard{
+    border-radius:20px;
+    background:#ffffff !important;
+
+    box-shadow:
+        0 8px 24px rgba(0,0,0,.08);
+}
+
+.quantityBox{
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    padding:.25rem .5rem;
+}
+
+.cartTotalValue{
+    color:#16A34A !important;
+    font-weight:700 !important;
+}
+
+/* CHECKOUT */
+
+.checkoutCard{
+    border-radius:20px;
+    box-shadow:
+        0 8px 24px rgba(0,0,0,.08);
+}
+
+.checkoutTotal{
+    color:#16A34A !important;
+    font-weight:700 !important;
+}
+
+.checkoutPrimaryBtn .sapMBtnInner{
+    border-radius:12px;
+}
+
+/* INPUTS */
+
+.sapMInputBaseInner,
+.sapMTextAreaInner{
+    border-radius:10px;
+}
+.orderItemCard{
+    border-radius:16px;
+
+    background:white !important;
+
+    box-shadow:
+        0 4px 16px rgba(0,0,0,.06);
+
+    margin-bottom:1rem;
+}
+
+.orderHeaderCard{
+    background:white;
+
+    border-radius:20px;
+
+    padding:1rem;
+
+    box-shadow:
+        0 8px 24px rgba(0,0,0,.08);
+}
+
+.orderBillCard{
+    border-radius:20px;
+
+    box-shadow:
+        0 8px 24px rgba(0,0,0,.08);
+}
+
+.grandTotalValue{
+    color:#16A34A !important;
+    font-weight:700 !important;
+}
+
+
+.restaurantHome{
+    
+     background:#f8fafc !important;
+    padding:1.5rem;
+    min-height:100vh;
+    width:100%;
+    box-sizing:border-box;
+    
+ 
+}
+.restaurantLayout{
+    background:#f8fafc !important;
+    min-height:100vh;
+}
+.businessSidebar{
+    background:white;
+    border-radius:20px;
+    padding:1rem;
+    box-shadow:0 4px 16px rgba(0,0,0,.05);
+    height:100%;
+}
+
+/* HERO */
+
+.restaurantHero{
+ 
+        background:linear-gradient(
+        135deg,
+        #ff6b35,
+        #ff914d
+    );
+    border-radius:28px;
+    padding:3rem;
+    margin-bottom:2rem;
+    box-shadow:0 12px 30px rgba(255,107,53,.20);
+
+    
+}
+
+/* Heading */
+.restaurantHero .sapMTitle{
+    color:#ffffff !important;
+}
+
+/* Text */
+.restaurantHero .sapMText{
+    color:#ffffff !important;
+}
+
+/* Status Text */
+.restaurantHero .sapMObjStatusText{
+    color:#DCFCE7 !important;
+    font-weight:700 !important;
+}
+.restaurantStatus .sapMObjStatusText{
+    color:#DCFCE7 !important;
+    font-size:1rem !important;
+    font-weight:700 !important;
+}
+
+.restaurantHeroTitle{
+    color:#ffffff !important;
+    font-size:2.2rem !important;
+    font-weight:800 !important;
+    margin-top:0.25rem;
+}
+
+.restaurantHeroSubtitle{
+    color:rgba(255,255,255,.92) !important;
+    font-size:1rem !important;
+    margin-top:0.25rem;
+}
+
+
+
+/* KPI */
+
+.kpiCard{
+    width:240px;
+
+    padding:1rem;
+
+    margin:.5rem;
+
+    border-radius:16px;
+
+    background:white;
+
+    box-shadow:
+    0 6px 20px rgba(0,0,0,.06);
+}
+
+.ordersCard{
+    border-left:5px solid #2563EB;
+}
+
+.revenueCard{
+    border-left:5px solid #16A34A;
+}
+
+.ratingCard{
+    border-left:5px solid #F59E0B;
+}
+
+.returnCard{
+    border-left:5px solid #EF4444;
+}
+
+/* ATTENTION */
+
+.attentionCard{
+    margin-bottom:1rem;
+
+    border-radius:16px;
+
+    box-shadow:
+    0 6px 20px rgba(0,0,0,.06);
+}
+
+/* QUICK ACTIONS */
+
+.actionCard{
+    width:220px;
+
+    padding:1.5rem;
+
+    margin:1rem;
+
+    text-align:center;
+
+    background:white;
+
+    border-radius:16px;
+
+    box-shadow:
+    0 6px 20px rgba(0,0,0,.06);
+}
+
+.actionCard:hover{
+    transform:translateY(-5px);
+
+    transition:.3s ease;
+}
+.trackingHeaderCard{
+    background:#ffffff;
+    border-radius:20px;
+    padding:1rem;
+
+    box-shadow:
+        0 8px 24px rgba(0,0,0,.08);
+}
+
+.trackingProgressCard{
+    border-radius:20px;
+
+    box-shadow:
+        0 8px 24px rgba(0,0,0,.08);
+}
+
+.trackingInfoCard{
+    border-radius:20px;
+
+    box-shadow:
+        0 8px 24px rgba(0,0,0,.08);
+}
+
+.trackingItemCard{
+    border-radius:16px;
+
+    background:#ffffff !important;
+
+    box-shadow:
+        0 4px 16px rgba(0,0,0,.06);
+
+    margin-bottom:1rem;
+    padding:0.75rem;
+}
+
+.trackingBillCard{
+    border-radius:20px;
+
+    box-shadow:
+        0 8px 24px rgba(0,0,0,.08);
+}
+.trackingBillCard .sapMTB{
+    margin:0.5rem 0;
+}
+
+.grandTotalValue{
+    color:#16A34A !important;
+    font-weight:700 !important;
+}
+
+.sapSuiteUiCommonsProcessFlow{
+    background:white;
+}
+
+.sapSuiteUiCommonsProcessFlowNode{
+    border-radius:12px;
+}
+.trackingInfoCard .sapMObjectAttributeDiv{
+    margin-bottom:0.75rem;
+}
+.orderBillCard .sapMTB{
+    margin:.5rem 0;
+}
+
+.freeDelivery{
+    color:#16A34A !important;
+    font-weight:700;
+}
+
+.sapFCard .sapMTitle{
+    font-weight:700;
+}
+.dashboardMetric{
+    font-size:2rem !important;
+}
+.orderPrice{
+    color:#16A34A !important;
+    font-weight:700 !important;
+}
+#businessMenuList .sapMPanel{
+    min-height:260px;
+}
+.menuPrice{
+    color:#16A34A !important;
+    font-weight:700 !important;
+}
+.sapMListTblRow{
+    min-height:60px;
+}
+#customerMenuSection {
+    background: #e8f5e9 !important;
+}
+/* Hide the focus box on tab buttons after a mouse click or when focus lands there
+   by itself. Keyboard focus (Tab key) still shows it, so accessibility is kept. */
+
+html:not(.bdTabbing) .bdNavToolbar .sapMBtn:focus > .sapMFocusable::before {
+    content: none !important;
+    border: none !important;
+}
+.bdDivider {
+    display: block;
+    height: 0;
+    margin: 0.75rem 0;
+    border-top: 1px solid var(--sapGroup_TitleBorderColor, #d9d9d9);
+}
+/* Add to webapp/css/style.css (needed by shell-header-navigation.xml and restaurant-section.xml) */
+
+/* ---- Header ---- */
+.biteDashShellHeader {
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
+}
+
+/* hide the tagline on phones so the role switch has room */
+@media (max-width: 600px) {
+    .bdHideOnPhone { display: none !important; }
+}
+
+/* ---- Restaurant sidebar ---- */
+.bdSidebarSubtitle {
+    color: #6b7280;
+    font-size: .75rem;
+}
+
+/* ---- Restaurant home cards (now plain boxes instead of panels) ---- */
+.restaurantHome .kpiCard {
+    width: auto;        /* the grid decides the width */
+    margin: 0;
+}
+
+.attentionCard {
+    background: #ffffff;
+    padding: 1rem 1.25rem;
+}
+
+.ordersAttentionCard  { border-left: 5px solid #2563EB; }
+.returnsAttentionCard { border-left: 5px solid #EF4444; }
+
+/* big numbers on dashboard and KPI cards */
+.dashboardMetric {
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+}
+
+/* LOGIN BACKGROUND */
+
+.biteLoginBackground {
+    min-height: 100vh;
+    background: linear-gradient(
+        135deg,
+        #fff0e8,
+        #ffb38a,
+        #ff713e
+    );
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+/* LOGIN CARD */
+
+.biteLoginCard {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 15px 45px rgba(80, 40, 20, 0.16);
+    border: none;
+}
+
+/* LOGO */
+
+.biteLoginLogo {
+    color: #ff6333;
+    font-size: 2.5rem;
+    font-weight: 800;
+}
+
+/* SUBTITLE */
+
+.biteLoginSubtitle {
+    color: #777777;
+    font-size: 0.9rem;
+}
+
+/* WELCOME */
+
+.biteLoginWelcome {
+    color: #292929;
+    font-weight: 700;
+    margin-top: 1rem;
+}
+
+.biteLoginDescription {
+    color: #777777;
+    margin-bottom: 1.5rem;
+}
+
+/* LABELS */
+
+.biteLoginLabel {
+    color: #333333;
+    font-weight: 600;
+    margin-top: 0.8rem;
+    margin-bottom: 0.4rem;
+}
+
+/* INPUTS */
+
+.biteLoginInput {
+    margin-bottom: 0.8rem;
+}
+
+/* ROLE SELECTOR */
+
+.biteLoginRole {
+    margin-bottom: 1rem;
+}
+
+/* LOGIN BUTTON */
+
+.biteLoginButton {
+    margin-top: 1.2rem;
+    height: 3rem;
+}
+
+/* DEMO DETAILS */
+
+.biteLoginDemoTitle {
+    color: #ff6333;
+    font-weight: 700;
+    margin-top: 1.5rem;
+}
+
+.biteLoginDemo {
+    color: #777777;
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+}
+
+/* MOBILE RESPONSIVE */
+
+@media (max-width: 600px) {
+    .biteLoginBackground {
+        padding: 1rem;
+    }
+
+    .biteLoginCard {
+        width: 100% !important;
+        padding: 1rem;
+    }
+}
+
+#foodMenuList .sapMListTblSelCol {
+    visibility: hidden;
 }

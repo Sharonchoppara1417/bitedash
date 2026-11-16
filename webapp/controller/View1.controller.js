@@ -18,13 +18,14 @@ sap.ui.define([
 
     return Controller.extend("bitedash.bitedash.controller.View1", {
 
-        // 1. INITIALIZATION
+// 1. INITIALIZATION
 
 onInit: function () {
     var oView = this.getView();
 
-    // Application and navigation model
+    // 1. Application and navigation model
     oView.setModel(new JSONModel({
+        isLoggedIn: false,
         role: "customer",
         section: "customerHome",
         cartCount: 0,
@@ -36,35 +37,50 @@ onInit: function () {
         searchText: ""
     }), "app");
 
-    // Product menu model
+    // 2. Product menu model
     oView.setModel(new JSONModel({
         items: [],
         loading: true
     }), "products");
 
-    // Shopping cart model
+    // 3. Shopping cart model
     oView.setModel(new JSONModel({
         items: [],
         count: 0,
         total: 0
     }), "cart");
-   
-    // Orders model
+
+    // 4. Restaurant orders model
     oView.setModel(new JSONModel({
         items: []
     }), "orderData");
 
-    // Checkout model
+    // 5. Customer My Orders model
+    oView.setModel(new JSONModel({
+        items: []
+    }), "orderedProducts");
+
+    // 6. Selected customer order model
+    oView.setModel(new JSONModel({}), "selectedOrderedProduct");
+
+    // 7. Selected restaurant order model
+    oView.setModel(new JSONModel({}), "selectedOrder");
+
+    // 8. Checkout model
     oView.setModel(new JSONModel({
         CustomerName: "",
         Phone: "",
+        HouseNo: "",
+    Street: "",
+    Landmark: "",
+    City: "",
+    State: "",
+    Pincode: "",
         Address: "",
         PaymentIndex: 0
     }), "checkout");
 
-    // Selected order model
-    oView.setModel(new JSONModel({}), "selectedOrder");
-    // Customer tracking page model
+    // 9. Customer tracking page model
     oView.setModel(new JSONModel({
         orderId: "",
         status: "",
@@ -82,44 +98,81 @@ onInit: function () {
         }
     }), "trackOrder");
 
-
-    // Categories model
+    // 10. Categories model
     oView.setModel(new JSONModel({
         items: []
     }), "categories");
 
-    // Return requests model
+    // 11. Return requests model
     oView.setModel(new JSONModel({
         items: []
     }), "returnData");
 
-    // Ordered products model
+    // 12. Return dashboard summary model
     oView.setModel(new JSONModel({
-        items: []
-    }), "orderedProducts");
+        all: 0,
+        open: 0,
+        needs: 0,
+        awaitingPickup: 0,
+        inPickup: 0,
+        refunded: 0,
+        rejected: 0,
+        refundValue: 0
+    }), "returnsView");
 
-    // Selected product details model
-    oView.setModel(new JSONModel({}), "selectedOrderedProduct");
+    // 13. Business dashboard model
+    oView.setModel(new JSONModel({
+        greeting: "Good evening, Spice Garden",
+        ordersToday: 0,
+        revenue: "0.0",
+        rating: "4.5",
+        dishesAvailable: 0,
+        alerts: []
+    }), "homeView");
 
- oView.setModel(new JSONModel({
-    greeting: "Good evening, Spice Garden",
-    ordersToday: 0,
-    revenue: "0.0",
-    rating: "4.5",
-    dishesAvailable: 0,
-    alerts: []
-}), "homeView");
-
-    // Load data only after all models exist
+    // 14. Load application data after initializing models
     this._loadOrders();
     this._loadProducts();
     this._loadReturns();
-
+    // 15. Show the focus box on tab buttons only for Tab/arrow-key navigation
+    this._initFocusMode();
 },
-        
+    _initFocusMode: function () {
+        var oRoot = document.documentElement;
 
+        this._fnFocusKeyDown = function (oEvent) {
+            var bNavKey = oEvent.key === "Tab" ||
+                oEvent.key === "ArrowLeft" ||
+                oEvent.key === "ArrowRight";
+            var bActivateKey = oEvent.key === "Enter" || oEvent.key === " ";
+            var bOnNavButton = oEvent.target && oEvent.target.closest &&
+                oEvent.target.closest(".bdNavToolbar");
 
-_refreshBusinessHome: function () {
+            if (bNavKey) {
+                oRoot.classList.add("bdTabbing");
+            } else if (!(bActivateKey && bOnNavButton)) {
+                oRoot.classList.remove("bdTabbing");
+            }
+        };
+
+        this._fnFocusPointer = function () {
+            oRoot.classList.remove("bdTabbing");
+        };
+
+        document.addEventListener("keydown", this._fnFocusKeyDown, true);
+        document.addEventListener("mousedown", this._fnFocusPointer, true);
+        document.addEventListener("touchstart", this._fnFocusPointer, true);
+    },
+
+    onExit: function () {
+        document.removeEventListener("keydown", this._fnFocusKeyDown, true);
+        document.removeEventListener("mousedown", this._fnFocusPointer, true);
+        document.removeEventListener("touchstart", this._fnFocusPointer, true);
+        document.documentElement.classList.remove("bdTabbing");
+    },
+
+// 2. DASHBOARD / BUSINESS HOME
+    _refreshBusinessHome: function () {
     var oView = this.getView();
     var oHomeModel = oView.getModel("homeView");
 
@@ -245,8 +298,7 @@ var aAlerts = [
         alerts: aAlerts
     });
 },
-
-onHomeAlertPress: function (oEvent) {
+    onHomeAlertPress: function (oEvent) {
     var oContext = oEvent.getSource()
         .getBindingContext("homeView");
 
@@ -265,15 +317,27 @@ onHomeAlertPress: function (oEvent) {
         this.byId("addMenuItemPanel").setExpanded(true);
     }
 },
+    onOpenBusinessOrders: function () {
+            this._loadOrders();
 
-onOpenBusinessReturns: function () {
+            this.getView().getModel("app")
+                .setProperty("/section", "businessOrders");
+},
+    onOpenBusinessMenu: function () {
+            this._loadProducts();
+
+            this.getView().getModel("app")
+                .setProperty("/section", "businessMenu");
+},
+    onOpenBusinessReturns: function () {
     this._loadReturns();
 
     this.getView().getModel("app")
         .setProperty("/section", "businessReturns");
 },
-// 2. LOAD PRODUCTS AND CATEGORIES
-_loadProducts: function () {
+
+//3. DATA LOADING
+    _loadProducts: function () {
     var oView = this.getView();
     var oODataModel = this.getOwnerComponent().getModel();
     var oProductsModel = oView.getModel("products");
@@ -470,8 +534,203 @@ that._prepareOrderedProducts();
         }
     });
 },
-        // 3. ROLE SWITCHING AND NAVIGATION
-        onRoleChange: function (oEvent) {
+    _loadOrders: function () {
+    var aOrders = [];
+
+    try {
+        aOrders = JSON.parse(
+            localStorage.getItem("biteDashOrders") || "[]"
+        );
+
+        if (!Array.isArray(aOrders)) {
+            aOrders = [];
+        }
+    } catch (e) {
+        MessageToast.show("Could not read saved orders.");
+        console.error("Order loading failed:", e);
+        aOrders = [];
+    }
+
+    aOrders.forEach(function (oOrder) {
+        oOrder.Items = Array.isArray(oOrder.Items)
+            ? oOrder.Items
+            : [];
+
+        oOrder.ItemSummary = oOrder.Items.map(function (oItem) {
+            return (oItem.Name || "Product") +
+                " × " + (Number(oItem.Quantity) || 1);
+        }).join(", ");
+
+        oOrder.Total = Number(oOrder.Total) || 0;
+    });
+
+    // Store complete orders
+    this.getView()
+        .getModel("orderData")
+        .setProperty("/items", aOrders);
+
+    // Update dashboard counts
+    var iIncomingOrders = aOrders.filter(function (oOrder) {
+        return oOrder.Status !== "Delivered" &&
+            oOrder.Status !== "Cancelled";
+    }).length;
+
+    var iPreparingOrders = aOrders.filter(function (oOrder) {
+        return oOrder.Status === "Preparing";
+    }).length;
+
+    var iDeliveredOrders = aOrders.filter(function (oOrder) {
+        return oOrder.Status === "Delivered";
+    }).length;
+
+    var oAppModel = this.getView().getModel("app");
+
+    oAppModel.setProperty("/incomingOrders", iIncomingOrders);
+    oAppModel.setProperty("/preparingOrders", iPreparingOrders);
+    oAppModel.setProperty("/deliveredOrders", iDeliveredOrders);
+
+    // Prepare customer My Orders list
+    this._prepareOrderedProducts();
+
+    this._refreshBusinessHome();
+},
+
+
+_loadReturns: function () {
+
+    var oView = this.getView();
+    var aOrders = [];
+
+    // 1. Read saved orders from localStorage
+    try {
+        aOrders = JSON.parse(
+            localStorage.getItem("biteDashOrders") || "[]"
+        );
+
+        // Make sure the saved data is an array
+        if (!Array.isArray(aOrders)) {
+            aOrders = [];
+        }
+
+    } catch (e) {
+        sap.m.MessageToast.show("Could not load return requests.");
+        aOrders = [];
+    }
+
+    // 2. Extract orders that have return requests
+    var aReturns = aOrders
+        .filter(function (oOrder) {
+            return !!oOrder.ReturnStatus;
+        })
+        .map(function (oOrder) {
+
+            var aItems = Array.isArray(oOrder.Items)
+                ? oOrder.Items
+                : [];
+
+            var fRefundAmount = Number(
+                oOrder.RefundAmount != null
+                    ? oOrder.RefundAmount
+                    : oOrder.Total || 0
+            );
+
+            return Object.assign({}, oOrder, {
+
+                ItemSummary: oOrder.ItemSummary ||
+                    aItems.map(function (oItem) {
+                        return (oItem.Name || "Item") +
+                            " × " + (oItem.Quantity || 1);
+                    }).join(", "),
+
+                RefundAmount: isNaN(fRefundAmount)
+                    ? 0
+                    : fRefundAmount,
+
+                expanded: false
+
+            });
+
+        });
+
+    // 3. Preserve the complete original returns list
+    // Search and status filters must always use this array
+    this._aAllReturns = aReturns;
+
+    // 4. Calculate summary counts
+    var iOpen = 0;
+    var iNeeds = 0;
+    var iAwaitingPickup = 0;
+    var iInPickup = 0;
+    var iRefunded = 0;
+    var iRejected = 0;
+    var fRefundValue = 0;
+
+    aReturns.forEach(function (oReturn) {
+
+        var sStatus = oReturn.ReturnStatus;
+
+        if (sStatus !== "Rejected" && sStatus !== "Refunded") {
+            iOpen++;
+        }
+
+        if (sStatus === "Requested") {
+            iNeeds++;
+        }
+
+        if (sStatus === "Approved") {
+            iAwaitingPickup++;
+        }
+
+        if (
+            sStatus === "Pickup Scheduled" ||
+            sStatus === "Picked Up"
+        ) {
+            iInPickup++;
+        }
+
+        if (sStatus === "Refunded") {
+            iRefunded++;
+            fRefundValue += oReturn.RefundAmount;
+        }
+
+        if (sStatus === "Rejected") {
+            iRejected++;
+        }
+
+    });
+
+    // 5. Update summary tiles and filter counts
+    oView.getModel("returnsView").setData({
+
+        all: aReturns.length,
+        open: iOpen,
+        needs: iNeeds,
+        awaitingPickup: iAwaitingPickup,
+        inPickup: iInPickup,
+        refunded: iRefunded,
+        rejected: iRejected,
+        refundValue: fRefundValue.toFixed(2)
+
+    });
+
+    // 6. Update application return count
+    oView.getModel("app").setProperty(
+        "/returnCount",
+        iOpen
+    );
+
+    // 7. Apply current search and selected status filter
+    this._applyReturnFilters();
+
+    // 8. Refresh restaurant dashboard
+    this._refreshBusinessHome();
+
+},
+
+
+
+// 4. ROLE SWITCHING AND NAVIGATION
+    onRoleChange: function (oEvent) {
             var oItem = oEvent.getParameter("item");
             var sRole;
 
@@ -506,71 +765,148 @@ if (sRole === "business") {
                 this._loadProducts();
                 MessageToast.show("Customer mode opened");
             }
-        },
+},
+    onNavigate: function (oEvent) {
+    var oSource = oEvent.getSource();
+    var sSection = oSource.data("section");
+    var oAppModel = this.getView().getModel("app");
 
-        onNavigate: function (oEvent) {
-            var sSection = oEvent.getSource().data("section");
+    if (!sSection) {
+        console.warn("Navigation section is missing.");
+        return;
+    }
 
-            if (!sSection) {
-                return;
-            }
+    console.log("Navigation requested:", sSection);
 
-            this.getView().getModel("app")
-                .setProperty("/section", sSection);
+    oAppModel.setProperty("/section", sSection);
 
-            if (
-                sSection === "customerOrders" ||
-                sSection === "businessOrders"
-            ) {
-                this._loadOrders();
-            }
+    if (sSection === "customerOrders" ||
+        sSection === "businessOrders") {
+        this._loadOrders();
+    }
 
-            if (sSection === "customerMenu" ||
-                sSection === "businessMenu") {
-                this._loadProducts();
-            }
-            if (sSection === "businessReturns") {
-            this._loadReturns();
-}
-        },
+    if (sSection === "customerMenu" ||
+        sSection === "businessMenu") {
+        this._loadProducts();
+    }
 
-        onOpenMenu: function () {
-            this.getView().getModel("app")
-                .setProperty("/section", "customerMenu");
-        },
+    if (sSection === "businessReturns") {
+        this._loadReturns();
+    }
 
-        onOpenBusinessOrders: function () {
-            this._loadOrders();
+    console.log(
+        "Current section:",
+        oAppModel.getProperty("/section")
+    );
+},
+   onCustomerHome: function () {
+    var oAppModel = this.getView().getModel("app");
 
-            this.getView().getModel("app")
-                .setProperty("/section", "businessOrders");
-        },
+    oAppModel.setProperty("/role", "customer");
+    oAppModel.setProperty("/section", "customerHome");
+},
 
-        onOpenBusinessMenu: function () {
-            this._loadProducts();
+    onOpenMenu: function () {
+    var oView = this.getView();
+    var oAppModel = oView.getModel("app");
 
-            this.getView().getModel("app")
-                .setProperty("/section", "businessMenu");
-        },
+    // Set customer role
+    oAppModel.setProperty("/role", "customer");
 
+    // Navigate to Menu
+    oAppModel.setProperty("/section", "customerMenu");
 
-        // 4. CUSTOMER MENU SEARCH AND CATEGORY FILTERING
-        onSearch: function (oEvent) {
-            var sQuery =
-                oEvent.getParameter("newValue") ||
-                oEvent.getParameter("query") ||
-                "";
+    console.log("Before loading products:",
+        oAppModel.getProperty("/section"));
 
-            this.getView().getModel("app")
-                .setProperty("/searchText", sQuery);
+    // Load menu products
+    this._loadProducts();
 
-            this._applyFoodFilters(sQuery);
-        },
-        
+    console.log("After loading products:",
+        oAppModel.getProperty("/section"));
+},
+    onOpenCart: function () {
+    var oAppModel = this.getView().getModel("app");
 
+    oAppModel.setProperty("/role", "customer");
+    oAppModel.setProperty("/section", "customerCart");
+},
+    onRestaurantOrders: function () {
 
+    this.getView()
+        .getModel("app")
+        .setProperty("/section", "businessOrders");
 
-        onFoodSearch: function (oEvent) {
+},
+    onRestaurantMenu: function () {
+
+    this.getView()
+        .getModel("app")
+        .setProperty("/section", "businessMenu");
+
+},
+
+//5. CUSTOMER SEARCH
+    onHomeSearchLiveChange: function (oEvent) {
+
+    var sQuery = oEvent.getParameter("newValue") || "";
+
+    this.getView().getModel("app").setProperty(
+        "/searchText",
+        sQuery
+    );
+
+},
+
+    onHomeSearchSubmit: function (oEvent) {
+
+    var sQuery = oEvent.getParameter("query") || "";
+
+    sQuery = sQuery.trim();
+
+    this.getView().getModel("app").setProperty(
+        "/searchText",
+        sQuery
+    );
+
+    // Navigate to menu
+    this.getView().getModel("app").setProperty(
+        "/section",
+        "customerMenu"
+    );
+
+    // Synchronize menu search field
+    var oMenuSearch = this.byId("foodSearchField");
+
+    if (oMenuSearch) {
+        oMenuSearch.setValue(sQuery);
+    }
+
+    // Apply product filters
+    this._applyFoodFilters(sQuery);
+
+},
+
+//6. CUSTOMER MENU
+    onSearch: function (oEvent) {
+
+    var sQuery = oEvent.getParameter("newValue");
+
+    if (sQuery === undefined) {
+        sQuery = oEvent.getParameter("query") || "";
+    }
+
+    sQuery = sQuery.trim();
+
+    this.getView().getModel("app").setProperty(
+        "/searchText",
+        sQuery
+    );
+
+    this._applyFoodFilters(sQuery);
+
+},
+    onFoodSearch: function (oEvent) {
             var sQuery = oEvent.getParameter("newValue");
 
             if (sQuery === undefined) {
@@ -581,114 +917,455 @@ if (sRole === "business") {
                 .setProperty("/searchText", sQuery);
 
             this._applyFoodFilters(sQuery);
-        },
-
-        onFoodCategoryChange: function () {
-            var oSearchField = this.getView()
-                .byId("foodSearchField");
-
-            this._applyFoodFilters(
-                oSearchField ? oSearchField.getValue() : ""
-            );
-        }, 
-
-
-onFoodCategoryChange: function () {
+},
+    onFoodCategoryChange: function () {
     var oSearch = this.byId("foodSearchField");
 
     this._applyFoodFilters(
         oSearch ? oSearch.getValue() : ""
     );
 },
+    onMenuCategoryButton: function (oEvent) {
+
+    var sCategory = oEvent.getSource().data("category") || "All";
+
+    this._sMenuCategory = sCategory;
+
+    var oTable = this.byId("foodMenuList");
+
+    if (oTable) {
+        oTable.removeSelections(true);
+    }
+
+    this._oSelectedMenuProduct = null;
+
+    this.getView().getModel("app").setProperty(
+        "/canAddSelectedProduct",
+        false
+    );
+
+    // Reapply search and category filters together
+    this._applyFoodFilters();
+
+},
+   
 
 
-onFoodCategoryChange: function () {
-    var oSearch = this.byId("foodSearchField");
 
-    this._applyFoodFilters(
-        oSearch ? oSearch.getValue() : ""
+
+onMenuProductSelect: function (oEvent) {
+    var oTable = oEvent.getSource();
+    var oApp = this.getView().getModel("app");
+
+    if (!this._aSelectedMenuProducts) {
+        this._aSelectedMenuProducts = [];
+    }
+
+    var bSelectAll = oEvent.getParameter("selectAll");
+    var bSelected = oEvent.getParameter("selected");
+
+    // HEADER CHECKBOX
+    if (bSelectAll) {
+
+        if (typeof bSelected !== "boolean") {
+            bSelected = oTable.getSelectedItems().length > 0;
+        }
+
+        var oBinding = oTable.getBinding("items");
+
+        if (!oBinding) {
+            return;
+        }
+
+        // Get the complete filtered result, not only loaded rows
+        var iLength = oBinding.getLength();
+        var aContexts = oBinding.getContexts(0, iLength);
+
+        if (bSelected) {
+
+            // Select every product in the active category/search
+            aContexts.forEach(function (oContext) {
+
+                if (!oContext) {
+                    return;
+                }
+
+                var oProduct = oContext.getObject();
+                var sKey = this._getMenuProductKey(oProduct);
+
+                if (sKey === null) {
+                    return;
+                }
+
+                var bAlreadySelected =
+                    this._aSelectedMenuProducts.some(function (oItem) {
+                        return this._getMenuProductKey(oItem) === sKey;
+                    }.bind(this));
+
+                if (!bAlreadySelected) {
+                    this._aSelectedMenuProducts.push(
+                        Object.assign({}, oProduct)
+                    );
+                }
+
+            }.bind(this));
+
+        } else {
+
+            // Deselect only products belonging to the current filter
+            var aCurrentKeys = aContexts.map(function (oContext) {
+                return oContext
+                    ? this._getMenuProductKey(oContext.getObject())
+                    : null;
+            }.bind(this));
+
+            this._aSelectedMenuProducts =
+                this._aSelectedMenuProducts.filter(function (oItem) {
+                    return aCurrentKeys.indexOf(
+                        this._getMenuProductKey(oItem)
+                    ) === -1;
+                }.bind(this));
+        }
+
+    } else {
+
+        // INDIVIDUAL ROW CHECKBOX
+        var oRow = oEvent.getParameter("listItem");
+
+        if (oRow) {
+
+            var oContext = oRow.getBindingContext("products");
+
+            if (!oContext) {
+                return;
+            }
+
+            var oProduct = oContext.getObject();
+            var sProductKey = this._getMenuProductKey(oProduct);
+
+            if (sProductKey === null) {
+                return;
+            }
+
+            var iIndex =
+                this._aSelectedMenuProducts.findIndex(function (oItem) {
+                    return this._getMenuProductKey(oItem) === sProductKey;
+                }.bind(this));
+
+            if (bSelected) {
+
+                if (iIndex === -1) {
+                    this._aSelectedMenuProducts.push(
+                        Object.assign({}, oProduct)
+                    );
+                }
+
+            } else {
+
+                if (iIndex !== -1) {
+                    this._aSelectedMenuProducts.splice(iIndex, 1);
+                }
+            }
+        }
+    }
+
+    // Enable or disable Add to Cart
+    oApp.setProperty(
+        "/canAddSelectedProduct",
+        this._aSelectedMenuProducts.length > 0
     );
 },
 
 
 
-       
-        // Increase cart item quantity
+    _applyFoodFilters: function (sSearch) {
 
-// Increase cart item quantity
+    var oTable = this.byId("foodMenuList");
+
+    if (!oTable) {
+        return;
+    }
+
+    var oBinding = oTable.getBinding("items");
+
+    if (!oBinding) {
+        return;
+    }
+
+    var Filter = sap.ui.model.Filter;
+    var FilterOperator = sap.ui.model.FilterOperator;
+
+    var aFilters = [];
+
+    // STEP 1: Get search text
+    if (sSearch === undefined || sSearch === null) {
+
+        sSearch = this.getView()
+            .getModel("app")
+            .getProperty("/searchText") || "";
+
+    }
+
+    sSearch = sSearch.trim();
+
+    // STEP 2: Search by product name or description
+    if (sSearch) {
+
+        aFilters.push(new Filter({
+            filters: [
+                new Filter(
+                    "Name",
+                    FilterOperator.Contains,
+                    sSearch
+                ),
+                new Filter(
+                    "Description",
+                    FilterOperator.Contains,
+                    sSearch
+                )
+            ],
+            and: false
+        }));
+
+    }
+
+    // STEP 3: Apply category filter
+    var sCategory = this._sMenuCategory || "All";
+
+    if (sCategory !== "All") {
+
+        aFilters.push(new Filter({
+            filters: [
+                new Filter(
+                    "Category",
+                    FilterOperator.EQ,
+                    sCategory
+                ),
+                new Filter(
+                    "CategoryNames",
+                    FilterOperator.Contains,
+                    sCategory
+                )
+            ],
+            and: false
+        }));
+
+    }
+
+    // STEP 4: Apply all filters
+    oBinding.filter(aFilters);
+
+},
+
+//7. CART MANAGEMENT
+
+
+
+
+
+
+
+
+
+onAddSelectedProductToCart: function () {
+    var oView = this.getView();
+    var oTable = this.byId("foodMenuList");
+    var oCart = oView.getModel("cart");
+    var oApp = oView.getModel("app");
+
+    if (!oCart) {
+        sap.m.MessageBox.error("Cart model not found.");
+        return;
+    }
+
+    var aSelectedProducts = this._aSelectedMenuProducts || [];
+
+    if (aSelectedProducts.length === 0) {
+        sap.m.MessageToast.show(
+            "Please select at least one product."
+        );
+        return;
+    }
+
+    var aCartItems = (oCart.getProperty("/items") || []).map(
+        function (oItem) {
+            return Object.assign({}, oItem);
+        }
+    );
+
+    var iAdded = 0;
+
+    aSelectedProducts.forEach(function (oProduct) {
+
+        var sKey = this._getMenuProductKey(oProduct);
+
+        if (sKey === null) {
+            return;
+        }
+
+        var iIndex = aCartItems.findIndex(function (oItem) {
+            return this._getMenuProductKey(oItem) === sKey;
+        }.bind(this));
+
+        if (iIndex !== -1) {
+
+            // Same product: increase quantity
+            aCartItems[iIndex].Quantity =
+                (Number(aCartItems[iIndex].Quantity) || 0) + 1;
+
+        } else {
+
+            // Different product: add a separate cart item
+            var oNewItem = Object.assign({}, oProduct);
+            oNewItem.Quantity = 1;
+
+            aCartItems.push(oNewItem);
+        }
+
+        iAdded++;
+
+    }.bind(this));
+
+    if (iAdded === 0) {
+        sap.m.MessageToast.show("No valid products selected.");
+        return;
+    }
+
+    // Update cart and totals
+    this._updateCartTotals(aCartItems);
+
+    // Clear all selections
+    if (oTable) {
+        oTable.removeSelections(true);
+    }
+
+    this._aSelectedMenuProducts = [];
+
+    oApp.setProperty("/canAddSelectedProduct", false);
+
+    sap.m.MessageToast.show(
+        iAdded + " products added to your cart."
+    );
+},
+
+
+
+_getMenuProductKey: function (oProduct) {
+    if (
+        !oProduct ||
+        oProduct.ID === undefined ||
+        oProduct.ID === null
+    ) {
+        return null;
+    }
+
+    // ID 0 is a valid product ID
+    return String(oProduct.ID);
+},
+
 onIncreaseCartItem: function (oEvent) {
     this._changeCartQuantity(oEvent, 1);
 },
-// Decrease cart item quantity
+
 onDecreaseCartItem: function (oEvent) {
     this._changeCartQuantity(oEvent, -1);
 },
 
-// Shared quantity update logic
 _changeCartQuantity: function (oEvent, iChange) {
     var oView = this.getView();
-    var oContext = oEvent.getSource().getBindingContext("cart");
     var oCart = oView.getModel("cart");
+    var oContext = oEvent.getSource().getBindingContext("cart");
 
     if (!oCart || !oContext) {
         sap.m.MessageToast.show("Cart item not found.");
         return;
     }
 
-    var oSelectedItem = oContext.getObject();
-    var aItems = (oCart.getProperty("/items") || []).map(function (oItem) {
-        return Object.assign({}, oItem);
-    });
+    // Get the exact array position of the clicked cart item
+    var sPath = oContext.getPath();
+    var aPathParts = sPath.split("/");
+    var iIndex = Number(aPathParts[aPathParts.length - 1]);
 
-    var iIndex = aItems.findIndex(function (oItem) {
-        return String(oItem.ID) === String(oSelectedItem.ID);
-    });
+    var aItems = oCart.getProperty("/items") || [];
 
-    if (iIndex === -1) {
-        sap.m.MessageToast.show("Cart item not found.");
+    if (
+        aPathParts.length < 3 ||
+        aPathParts[aPathParts.length - 2] !== "items" ||
+        !Number.isInteger(iIndex) ||
+        iIndex < 0 ||
+        iIndex >= aItems.length
+    ) {
+        sap.m.MessageToast.show("Invalid cart item.");
         return;
     }
+
+    // Create a new array to update the JSONModel
+    aItems = aItems.map(function (oItem) {
+        return Object.assign({}, oItem);
+    });
 
     var iCurrentQuantity = Number(aItems[iIndex].Quantity) || 1;
     var iNewQuantity = iCurrentQuantity + iChange;
 
-    // Remove the item when quantity reaches zero
+    // Remove item if quantity becomes zero
     if (iNewQuantity <= 0) {
+        var sRemovedName = aItems[iIndex].Name || "Item";
         aItems.splice(iIndex, 1);
-    } else {
-        aItems[iIndex].Quantity = iNewQuantity;
+
+        this._updateCartTotals(aItems);
+
+        sap.m.MessageToast.show(sRemovedName + " removed from cart.");
+        return;
     }
+
+    // Update only the clicked product quantity
+    aItems[iIndex].Quantity = iNewQuantity;
 
     this._updateCartTotals(aItems);
 },
-// Remove a cart item completely
+
 onRemoveCartItem: function (oEvent) {
     var oView = this.getView();
-    var oContext = oEvent.getSource().getBindingContext("cart");
     var oCart = oView.getModel("cart");
+    var oContext = oEvent.getSource().getBindingContext("cart");
 
     if (!oCart || !oContext) {
         sap.m.MessageToast.show("Cart item not found.");
         return;
     }
 
-    var oSelectedItem = oContext.getObject();
+    // Get the exact cart row index
+    var sPath = oContext.getPath();
+    var aPathParts = sPath.split("/");
+    var iIndex = Number(aPathParts[aPathParts.length - 1]);
 
-    var aItems = (oCart.getProperty("/items") || [])
-        .filter(function (oItem) {
-            return String(oItem.ID) !== String(oSelectedItem.ID);
-        })
-        .map(function (oItem) {
-            return Object.assign({}, oItem);
-        });
+    var aItems = oCart.getProperty("/items") || [];
+
+    if (
+        aPathParts.length < 3 ||
+        aPathParts[aPathParts.length - 2] !== "items" ||
+        !Number.isInteger(iIndex) ||
+        iIndex < 0 ||
+        iIndex >= aItems.length
+    ) {
+        sap.m.MessageToast.show("Invalid cart item.");
+        return;
+    }
+
+    var sRemovedName = aItems[iIndex].Name || "Item";
+
+    // Create a separate array and remove only the selected row
+    aItems = aItems.map(function (oItem) {
+        return Object.assign({}, oItem);
+    });
+
+    aItems.splice(iIndex, 1);
 
     this._updateCartTotals(aItems);
 
-    sap.m.MessageToast.show(
-        (oSelectedItem.Name || "Item") + " removed from cart."
-    );
+    sap.m.MessageToast.show(sRemovedName + " removed from cart.");
 },
-// Recalculate cart quantity and total
+
 _updateCartTotals: function (aItems) {
     var oView = this.getView();
     var oCart = oView.getModel("cart");
@@ -703,25 +1380,34 @@ _updateCartTotals: function (aItems) {
     var fTotal = 0;
 
     aItems.forEach(function (oItem) {
-        var iQuantity = Math.max(0, Number(oItem.Quantity) || 0);
-        var fPrice = Math.max(0, Number(oItem.Price) || 0);
+        var iQuantity = Math.max(
+            1,
+            Number(oItem.Quantity) || 1
+        );
+
+        var fPrice = Math.max(
+            0,
+            Number(oItem.Price) || 0
+        );
 
         oItem.Quantity = iQuantity;
+
         iCount += iQuantity;
         fTotal += fPrice * iQuantity;
     });
 
-    // Update the same model used by the cart XML
+    // Update cart model
     oCart.setProperty("/items", aItems);
     oCart.setProperty("/count", iCount);
     oCart.setProperty("/total", Number(fTotal.toFixed(2)));
 
+    // Update application cart counter
     if (oApp) {
         oApp.setProperty("/cartCount", iCount);
     }
 },
-// Proceed to checkout
-onProceedToCheckout: function () {
+
+    onProceedToCheckout: function () {
     var oView = this.getView();
     var oCart = oView.getModel("cart");
     var oApp = oView.getModel("app");
@@ -745,84 +1431,16 @@ onProceedToCheckout: function () {
 
     oApp.setProperty("/section", "checkout");
 },
-
-// Add the selected menu product to the cart
-onAddSelectedProductToCart: function () {
-    var oView = this.getView();
-    var oProduct = this._oSelectedMenuProduct;
-    var oCart = oView.getModel("cart");
-    var oApp = oView.getModel("app");
-
-    if (!oProduct) {
-        sap.m.MessageToast.show("Please select a product first.");
-        return;
-    }
-
-    if (!oCart) {
-        sap.m.MessageBox.error("Cart model not found.");
-        return;
-    }
-
-    var aItems = (oCart.getProperty("/items") || []).map(function (oItem) {
-        return Object.assign({}, oItem);
-    });
-
-    var iIndex = aItems.findIndex(function (oItem) {
-        return String(oItem.ID) === String(oProduct.ID);
-    });
-
-    if (iIndex !== -1) {
-        // Product already exists in cart: increase its quantity
-        aItems[iIndex].Quantity =
-            (Number(aItems[iIndex].Quantity) || 1) + 1;
-    } else {
-        // Add a separate copy so the menu object is not modified
-        var oNewItem = Object.assign({}, oProduct);
-        oNewItem.Quantity = 1;
-        aItems.push(oNewItem);
-    }
-
-    this._updateCartTotals(aItems);
-
-    sap.m.MessageToast.show(
-        (oProduct.Name || "Product") + " added to cart."
-    );
-
-    // Clear the menu table selection
-    var oTable = this.byId("foodMenuList");
-
-    if (oTable) {
-        oTable.removeSelections(true);
-    }
-
-    this._oSelectedMenuProduct = null;
-
-    if (oApp) {
-        oApp.setProperty("/canAddSelectedProduct", false);
-    }
-},
-// Return to the cart from checkout
-onBackToCart: function () {
+    onBackToCart: function () {
     var oApp = this.getView().getModel("app");
 
     if (oApp) {
         oApp.setProperty("/section", "customerCart");
     }
 },
-onOpenCart: function () {
-    this.getView()
-        .getModel("app")
-        .setProperty("/section", "customerCart");
-},
 
-
-
-
-
-       
-     
-
-        onPlaceOrder: function () {
+//8. CHECKOUT & ORDER SECTION
+    onPlaceOrder: function () {
             var oView = this.getView();
             var oCheckout = oView.getModel("checkout");
             var oCart = oView.getModel("cart");
@@ -948,79 +1566,347 @@ onOpenCart: function () {
                     }
                 }
             );
-        },
+}, 
 
+//9.CUSTOMER ORDERS
+    _prepareOrderedProducts: function () {
+    var oView = this.getView();
 
-  
- // 7. LOAD ORDERS AND DASHBOARD COUNTS
-_loadOrders: function () {
-    var aOrders = [];
+    var oOrdersModel = oView.getModel("orderData");
+    var aOrders = oOrdersModel.getProperty("/items") || [];
 
-    try {
-        aOrders = JSON.parse(
-            localStorage.getItem("biteDashOrders") || "[]"
-        );
+    var aOrderedProducts = aOrders.map(function (oOrder) {
 
-        if (!Array.isArray(aOrders)) {
-            aOrders = [];
-        }
-    } catch (e) {
-        MessageToast.show("Could not read saved orders.");
-        console.error("Order loading failed:", e);
-        aOrders = [];
-    }
+        var aItems = (oOrder.Items || []).map(function (oItem) {
+            return {
+                ID: oItem.ID,
+                Name: oItem.Name || "Product",
+                Description: oItem.Description || "",
+                Rating: Number(oItem.Rating) || 0,
+                Price: Number(oItem.Price) || 0,
+                Quantity: Number(oItem.Quantity) || 1
+            };
+        });
 
-    aOrders.forEach(function (oOrder) {
-        // Build product summary
-        oOrder.ItemSummary = (oOrder.Items || [])
-            .map(function (oItem) {
+        var nTotal = aItems.reduce(function (nSum, oItem) {
+            return nSum + (oItem.Price * oItem.Quantity);
+        }, 0);
+
+        return {
+            OrderID: oOrder.OrderID,
+            OrderDate: oOrder.OrderDate,
+            CustomerName: oOrder.CustomerName,
+            Phone: oOrder.Phone,
+            Address: oOrder.Address,
+            PaymentMethod: oOrder.PaymentMethod,
+            Status: oOrder.Status,
+            ReturnStatus: oOrder.ReturnStatus || "",
+            Items: aItems,
+            ItemSummary: aItems.map(function (oItem) {
                 return oItem.Name + " × " + oItem.Quantity;
-            })
-            .join(", ");
-
-        oOrder.Total = Number(oOrder.Total) || 0;
+            }).join(", "),
+            Total: Number(oOrder.Total) || nTotal
+        };
     });
 
-    // Update orders model
-    this.getView()
-        .getModel("orderData")
-        .setProperty("/items", aOrders);
+    // Update the model used by the My Orders XML
+    oView.getModel("orderedProducts").setProperty(
+        "/items",
+        aOrderedProducts
+    );
 
-    // Update dashboard counts
-    var iIncomingOrders = aOrders.filter(function (oOrder) {
-        return oOrder.Status !== "Delivered" &&
-            oOrder.Status !== "Cancelled";
-    }).length;
+    // Preserve the selected order if it still exists
+    var oSelectedModel = oView.getModel("selectedOrderedProduct");
+    var oSelected = oSelectedModel.getData();
 
-    var iPreparingOrders = aOrders.filter(function (oOrder) {
-        return oOrder.Status === "Preparing";
-    }).length;
+    if (oSelected && oSelected.OrderID) {
+        var oUpdated = aOrderedProducts.find(function (oOrder) {
+            return String(oOrder.OrderID) ===
+                String(oSelected.OrderID);
+        });
 
-    var iDeliveredOrders = aOrders.filter(function (oOrder) {
-        return oOrder.Status === "Delivered";
-    }).length;
+        if (oUpdated) {
+            oSelectedModel.setData(
+                Object.assign({}, oUpdated)
+            );
 
-    var oAppModel = this.getView().getModel("app");
-
-    if (oAppModel) {
-        oAppModel.setProperty("/incomingOrders", iIncomingOrders);
-        oAppModel.setProperty("/preparingOrders", iPreparingOrders);
-        oAppModel.setProperty("/deliveredOrders", iDeliveredOrders);
+            oView.getModel("selectedOrder").setData(
+                Object.assign({}, oUpdated)
+            );
+        }
     }
-   
+},
+    onOrderedProductSelect: function (oEvent) {
+    var oContext = oEvent.getSource()
+        .getBindingContext("orderedProducts");
 
-    // Refresh the ordered products list
-    this._prepareOrderedProducts();
-     this._refreshBusinessHome();
+    if (!oContext) {
+        return;
+    }
+
+    var oOrder = oContext.getObject();
+
+    this.getView()
+        .getModel("selectedOrderedProduct")
+        .setData(Object.assign({}, oOrder));
+
+    // Keep the existing tracking and return workflows compatible.
+    this.getView()
+        .getModel("selectedOrder")
+        .setData(Object.assign({}, oOrder));
 },
 
-        onRefreshOrders: function () {
+    onViewOrders: function () {
+    var oAppModel = this.getView().getModel("app");
+
+    oAppModel.setProperty("/role", "customer");
+    oAppModel.setProperty("/section", "customerOrders");
+
+    this._loadOrders();
+},
+    onCancelOrder: function (oEvent) {
+            var oContext = oEvent.getSource()
+                .getBindingContext("orderData");
+
+            if (!oContext) {
+                MessageToast.show("Order not found.");
+                return;
+            }
+
+            var oOrder = oContext.getObject();
+
+            var aCancellableStatuses = [
+                "Placed",
+                "Accepted",
+                "Preparing",
+                "Packed"
+            ];
+
+            if (aCancellableStatuses.indexOf(oOrder.Status) === -1) {
+                MessageToast.show(
+                    "This order can no longer be cancelled."
+                );
+                return;
+            }
+
+            var that = this;
+
+            MessageBox.confirm(
+                "Are you sure you want to cancel order #" +
+                    oOrder.OrderID + "?",
+                {
+                    title: "Cancel Order",
+                    actions: [
+                        MessageBox.Action.YES,
+                        MessageBox.Action.NO
+                    ],
+                    emphasizedAction: MessageBox.Action.NO,
+
+                    onClose: function (sAction) {
+                        if (sAction !== MessageBox.Action.YES) {
+                            return;
+                        }
+
+                        var aOrders;
+
+                        try {
+                            aOrders = JSON.parse(
+                                localStorage.getItem("biteDashOrders") || "[]"
+                            );
+                        } catch (e) {
+                            MessageBox.error(
+                                "Could not read saved orders."
+                            );
+                            return;
+                        }
+
+                        var oSavedOrder = aOrders.find(function (oItem) {
+                            return String(oItem.OrderID) ===
+                                String(oOrder.OrderID);
+                        });
+
+                        if (
+                            !oSavedOrder ||
+                            aCancellableStatuses.indexOf(
+                                oSavedOrder.Status
+                            ) === -1
+                        ) {
+                            MessageToast.show(
+                                "This order can no longer be cancelled."
+                            );
+
+                            that._loadOrders();
+                            return;
+                        }
+
+                        oSavedOrder.Status = "Cancelled";
+
+                        try {
+                            localStorage.setItem(
+                                "biteDashOrders",
+                                JSON.stringify(aOrders)
+                            );
+                        } catch (e) {
+                            MessageBox.error(
+                                "Could not save the cancellation."
+                            );
+                            return;
+                        }
+
+                        that._loadOrders();
+
+                        MessageToast.show(
+                            "Order cancelled successfully."
+                        );
+                    }
+                }
+            );
+},
+    onCancelSelectedOrder: function () {
+    var that = this;
+    var oSelected = this.getView()
+        .getModel("selectedOrderedProduct")
+        .getData();
+
+    if (!oSelected || oSelected.OrderID == null) {
+        MessageToast.show("Please select an order first.");
+        return;
+    }
+
+    var aCancellableStatuses = [
+        "Placed",
+        "Accepted",
+        "Preparing",
+        "Packed"
+    ];
+
+    if (aCancellableStatuses.indexOf(oSelected.Status) === -1) {
+        MessageToast.show("This order can no longer be cancelled.");
+        return;
+    }
+
+    MessageBox.confirm(
+        "Are you sure you want to cancel order #" +
+            oSelected.OrderID + "?",
+        {
+            title: "Cancel Order",
+            actions: [
+                MessageBox.Action.YES,
+                MessageBox.Action.NO
+            ],
+            emphasizedAction: MessageBox.Action.NO,
+
+            onClose: function (sAction) {
+                if (sAction !== MessageBox.Action.YES) {
+                    return;
+                }
+
+                var aOrders;
+
+                try {
+                    aOrders = JSON.parse(
+                        localStorage.getItem("biteDashOrders") || "[]"
+                    );
+
+                    if (!Array.isArray(aOrders)) {
+                        aOrders = [];
+                    }
+                } catch (e) {
+                    MessageBox.error("Could not read saved orders.");
+                    return;
+                }
+
+                var oSavedOrder = aOrders.find(function (oOrder) {
+                    return String(oOrder.OrderID) ===
+                        String(oSelected.OrderID);
+                });
+
+                // Recheck the saved status before cancelling.
+                if (!oSavedOrder ||
+                    aCancellableStatuses.indexOf(oSavedOrder.Status) === -1) {
+                    MessageToast.show(
+                        "This order can no longer be cancelled."
+                    );
+                    that._loadOrders();
+                    return;
+                }
+
+                oSavedOrder.Status = "Cancelled";
+
+                try {
+                    localStorage.setItem(
+                        "biteDashOrders",
+                        JSON.stringify(aOrders)
+                    );
+                } catch (e) {
+                    MessageBox.error("Could not save the cancellation.");
+                    return;
+                }
+
+                that._loadOrders();
+
+                MessageToast.show("Order cancelled successfully.");
+            }
+        }
+    );
+},
+
+//10.ORDER MANAGEMENT (BUSINESS)
+    onRefreshOrders: function () {
             this._loadOrders();
             MessageToast.show("Orders refreshed");
-        },
+},
+    onOrderSelect: function (oEvent) {
+    var oListItem = oEvent.getParameter("listItem");
 
-        // 8. RESTAURANT ORDER STATUS UPDATES
-        onAdvanceOrderStatus: function (oEvent) {
+    if (!oListItem) {
+        oListItem = oEvent.getSource().getSelectedItem();
+    }
+
+    if (!oListItem) {
+        return;
+    }
+
+    var oContext = oListItem.getBindingContext("orderData");
+
+    if (!oContext) {
+        return;
+    }
+
+    var oOrder = oContext.getObject();
+    var oSelectedOrderModel = this.getView().getModel("selectedOrder");
+
+    if (!oSelectedOrderModel) {
+        sap.m.MessageBox.error("Selected order model not found.");
+        return;
+    }
+
+    oSelectedOrderModel.setData(
+        Object.assign({}, oOrder)
+    );
+},
+    onSelectCustomerOrder: function (oEvent) {
+    var oItem = oEvent.getSource();
+    var oContext = oItem.getBindingContext("orderData");
+
+    if (!oContext) {
+        return;
+    }
+
+    var oOrder = oContext.getObject();
+    var oSelectedOrderModel = this.getView().getModel("selectedOrder");
+
+    if (!oSelectedOrderModel) {
+        sap.m.MessageBox.error("Selected order model not found.");
+        return;
+    }
+
+    // Show the clicked order in the right-side details panel.
+    oSelectedOrderModel.setData(
+        Object.assign({}, oOrder)
+    );
+},
+    onAdvanceOrderStatus: function (oEvent) {
             var oContext = oEvent.getSource()
                 .getBindingContext("orderData");
 
@@ -1094,13 +1980,419 @@ _loadOrders: function () {
             MessageToast.show(
                 "Order status updated to " + oSavedOrder.Status
             );
-        },
-        // 9. RESTAURANT MENU MANAGEMENT
-        onRefreshMenu: function () {
+},
+    onAdvanceSelectedOrderStatus: function () {
+    var oView = this.getView();
+    var oSelectedModel = oView.getModel("selectedOrder");
+    var oSelectedOrder = oSelectedModel.getData();
+
+    if (!oSelectedOrder || oSelectedOrder.OrderID == null) {
+        MessageToast.show("Please select an order first.");
+        return;
+    }
+
+    var aStatuses = [
+        "Placed",
+        "Accepted",
+        "Preparing",
+        "Packed",
+        "Picked Up",
+        "On The Way",
+        "Delivered"
+    ];
+
+    if (oSelectedOrder.Status === "Cancelled") {
+        MessageToast.show("Cancelled orders cannot be updated.");
+        return;
+    }
+
+    if (oSelectedOrder.Status === "Delivered") {
+        MessageToast.show("This order is already delivered.");
+        return;
+    }
+
+    var aOrders = [];
+
+    try {
+        aOrders = JSON.parse(
+            localStorage.getItem("biteDashOrders") || "[]"
+        );
+
+        if (!Array.isArray(aOrders)) {
+            aOrders = [];
+        }
+    } catch (e) {
+        MessageBox.error("Could not read saved orders.");
+        return;
+    }
+
+    var oSavedOrder = aOrders.find(function (oOrder) {
+        return String(oOrder.OrderID) ===
+            String(oSelectedOrder.OrderID);
+    });
+
+    if (!oSavedOrder) {
+        MessageBox.error("Selected order was not found.");
+        return;
+    }
+
+    var iCurrentIndex = aStatuses.indexOf(oSavedOrder.Status);
+
+    if (iCurrentIndex === -1) {
+        MessageBox.error("Unknown order status.");
+        return;
+    }
+
+    // Advance to the next status
+    oSavedOrder.Status = aStatuses[iCurrentIndex + 1];
+
+    try {
+        localStorage.setItem(
+            "biteDashOrders",
+            JSON.stringify(aOrders)
+        );
+    } catch (e) {
+        MessageBox.error("Could not save the updated order.");
+        return;
+    }
+
+    // Refresh the order list and dashboard counts
+    this._loadOrders();
+
+    // Keep the currently selected order visible on the right
+    var oUpdatedOrder = Object.assign({}, oSavedOrder);
+
+    oSelectedModel.setData(oUpdatedOrder);
+
+    MessageToast.show(
+        "Order status updated to " + oSavedOrder.Status
+    );
+},
+    onDeleteSelectedOrder: function () {
+    var oView = this.getView();
+    var oSelectedOrderModel = oView.getModel("selectedOrder");
+    var oOrderDataModel = oView.getModel("orderData");
+
+    var oSelectedOrder = oSelectedOrderModel.getData();
+
+    if (!oSelectedOrder || oSelectedOrder.OrderID == null) {
+        sap.m.MessageToast.show("Please select an order to delete.");
+        return;
+    }
+
+    var that = this;
+
+    sap.m.MessageBox.confirm(
+        "Are you sure you want to delete Order #" +
+            oSelectedOrder.OrderID + "?",
+        {
+            title: "Delete Order",
+            actions: [
+                sap.m.MessageBox.Action.DELETE,
+                sap.m.MessageBox.Action.CANCEL
+            ],
+            emphasizedAction: sap.m.MessageBox.Action.DELETE,
+
+            onClose: function (sAction) {
+                if (sAction !== sap.m.MessageBox.Action.DELETE) {
+                    return;
+                }
+
+                var aOrders =
+                    oOrderDataModel.getProperty("/items") || [];
+
+                var iIndex = aOrders.findIndex(function (oOrder) {
+                    return String(oOrder.OrderID) ===
+                        String(oSelectedOrder.OrderID);
+                });
+
+                if (iIndex === -1) {
+                    sap.m.MessageToast.show("Order not found.");
+                    return;
+                }
+
+                // Remove only the selected order
+                aOrders.splice(iIndex, 1);
+
+                oOrderDataModel.setProperty("/items", aOrders);
+
+                // Save the updated orders
+                localStorage.setItem(
+                    "biteDashOrders",
+                    JSON.stringify(aOrders)
+                );
+
+                // Clear the selection after deletion
+                oSelectedOrderModel.setData({});
+
+                // Clear selection in the left-side list
+                var oList = that.byId("businessOrdersList");
+                if (oList) {
+                    oList.removeSelections(true);
+                }
+
+                sap.m.MessageToast.show("Order deleted successfully.");
+            }
+        }
+    );
+},
+
+//11.ORDER TRACKING
+    onTrackOrder: function (oEvent) {
+
+    var oView = this.getView();
+
+    var oContext = oEvent.getSource()
+        .getBindingContext("orderData");
+
+    if (!oContext) {
+        oContext = oEvent.getSource()
+            .getBindingContext("orderedProducts");
+    }
+
+    if (!oContext) {
+        MessageToast.show("Order details not found.");
+        return;
+    }
+
+    var oOrder = Object.assign({}, oContext.getObject());
+
+    // Synchronize both selected order models
+    var oSelectedModel = oView.getModel("selectedOrder");
+    var oSelectedProductModel = oView.getModel("selectedOrderedProduct");
+
+    if (oSelectedModel) {
+        oSelectedModel.setData(oOrder);
+    }
+
+    if (oSelectedProductModel) {
+        oSelectedProductModel.setData(oOrder);
+    }
+
+    // Open tracking page using the selected order
+    this.onTrackSelectedOrder();
+},
+    onTrackSelectedOrder: function () {
+
+    var oView = this.getView();
+
+    // STEP 1: Get selected order
+    var oSelectedModel = oView.getModel("selectedOrderedProduct");
+
+    if (!oSelectedModel) {
+        MessageBox.error("Selected order model is not available.");
+        return;
+    }
+
+    var oSelected = oSelectedModel.getData();
+
+    if (!oSelected || oSelected.OrderID == null) {
+        MessageToast.show("Please select an order first.");
+        return;
+    }
+
+    // STEP 2: Get tracking model
+    var oTrackModel = oView.getModel("trackOrder");
+
+    if (!oTrackModel) {
+        MessageBox.error("Tracking model is not initialized.");
+        return;
+    }
+
+    // STEP 3: Tracking statuses
+    var aStatuses = [
+        "Placed",
+        "Approved",
+        "Prepared",
+        "Packed",
+        "Picked Up",
+        "On The Way",
+        "Delivered"
+    ];
+
+    var aIcons = [
+        "sap-icon://cart",
+        "sap-icon://accept",
+        "sap-icon://meal",
+        "sap-icon://product",
+        "sap-icon://shipping-status",
+        "sap-icon://journey-arrive",
+        "sap-icon://flag"
+    ];
+
+    // STEP 4: Convert order status
+    var sOriginalStatus = oSelected.Status || "Placed";
+
+    var oStatusMap = {
+        "Accepted": "Approved",
+        "Preparing": "Prepared"
+    };
+
+    var sStatus = oStatusMap[sOriginalStatus] || sOriginalStatus;
+
+    var bCancelled = sStatus === "Cancelled";
+
+    var iCurrentIndex = aStatuses.indexOf(sStatus);
+
+    if (!bCancelled && iCurrentIndex === -1) {
+        iCurrentIndex = 0;
+        sStatus = "Placed";
+    }
+
+    // STEP 5: Create ProcessFlow lanes
+    var aLanes = aStatuses.map(function (sLabel, iIndex) {
+        return {
+            id: String(iIndex + 1),
+            label: sLabel,
+            icon: aIcons[iIndex],
+            position: iIndex
+        };
+    });
+
+    // STEP 6: Create ProcessFlow nodes
+    var aNodes = aStatuses.map(function (sLabel, iIndex) {
+
+        var bCompleted = !bCancelled &&
+            iIndex <= iCurrentIndex;
+
+        return {
+            id: String(iIndex + 1),
+            lane: String(iIndex + 1),
+            title: sLabel,
+            state: bCompleted ? "Positive" : "Neutral",
+            stateText: bCompleted ? "Completed" : "Pending",
+
+            texts: [
+                bCompleted ? "Completed" : "Pending"
+            ],
+
+            children: iIndex < aStatuses.length - 1
+                ? [String(iIndex + 2)]
+                : []
+        };
+    });
+
+    // STEP 7: Prepare order items
+    var aItems = (oSelected.Items || []).map(function (oItem) {
+
+        return {
+            name: oItem.Name || "Food item",
+            qty: Number(oItem.Quantity) || 1,
+            price: Number(oItem.Price) || 0,
+            notes: oItem.Description || ""
+        };
+
+    });
+
+    // STEP 8: Calculate subtotal
+    var fSubtotal = aItems.reduce(function (fTotal, oItem) {
+
+        return fTotal + (oItem.price * oItem.qty);
+
+    }, 0);
+
+    var fTotal = Number(oSelected.Total);
+
+    if (!isFinite(fTotal)) {
+        fTotal = fSubtotal;
+    }
+
+    // STEP 9: Prepare tracking information
+    var oTrackData = {
+
+        orderId: oSelected.OrderID,
+
+        // Display actual order status
+        status: sOriginalStatus,
+
+        customerName: oSelected.CustomerName || "",
+        address: oSelected.Address || "",
+        paymentMode: oSelected.PaymentMethod || "Cash on Delivery",
+
+        lanes: aLanes,
+        nodes: aNodes,
+
+        steps: aStatuses.map(function (sLabel, iIndex) {
+
+            var bDone = !bCancelled &&
+                iIndex <= iCurrentIndex;
+
+            return {
+                name: sLabel,
+                done: bDone,
+                last: iIndex === aStatuses.length - 1,
+                time: bDone ? "Completed" : "Pending"
+            };
+
+        }),
+
+        items: aItems,
+
+        bill: {
+            subtotal: fSubtotal,
+            deliveryFee: 0,
+            tax: 0,
+            total: fTotal
+        }
+    };
+
+    // STEP 10: Update tracking model
+    oTrackModel.setData(oTrackData);
+
+    // STEP 11: Synchronize selected order
+    var oSelectedOrderModel = oView.getModel("selectedOrder");
+
+    if (oSelectedOrderModel) {
+        oSelectedOrderModel.setData(
+            Object.assign({}, oSelected)
+        );
+    }
+
+    // STEP 12: Navigate to tracking page
+    oView.getModel("app").setProperty(
+        "/role",
+        "customer"
+    );
+
+    oView.getModel("app").setProperty(
+        "/section",
+        "customerTracking"
+    );
+
+    // STEP 13: Refresh ProcessFlow
+    var oProcessFlow = this.byId("trackingFlow");
+
+    if (oProcessFlow) {
+        oProcessFlow.updateModel();
+    }
+
+},
+    onTrackingBack: function () {
+            this._loadOrders();
+
+            this.getView().getModel("app")
+                .setProperty("/section", "customerOrders");
+}, 
+
+//12.MENU MANAGEMENT (BUSINESS)
+    onRefreshMenu: function () {
             this._loadProducts();
             MessageToast.show("Refreshing menu...");
-        },
-        onCreateMenuItem: function () {
+},
+    onShowAddMenuItem: function () {
+    var oPanel = this.byId("addMenuItemPanel");
+
+    if (!oPanel) {
+        MessageToast.show(
+            "Add Menu Item panel is missing from View1.view.xml."
+        );
+        return;
+    }
+
+    oPanel.setVisible(true);
+    oPanel.setExpanded(true);
+},
+    onCreateMenuItem: function () {
             var oView = this.getView();
 
             var sName = oView.byId("menuItemName")
@@ -1125,9 +2417,9 @@ _loadOrders: function () {
                 return;
             }
             if (fRating < 0 || fRating > 5) {
-    MessageToast.show("Rating must be between 0 and 5.");
-    return;
-}
+                MessageToast.show("Rating must be between 0 and 5.");
+                return;
+            }
             var oProductsModel = oView.getModel("products");
             var aProducts = oProductsModel.getProperty("/items") || [];
             var aSavedItems;
@@ -1151,22 +2443,17 @@ _loadOrders: function () {
                 },
                 0
             );
-
-           
-          
-
-
-var oNewProduct = {
-    ID: iMaxID + 1,
-    Name: sName,
-    Description: sDescription,
-    Price: nPrice,
-    Rating: Number(fRating) || 0,
-   
-       Category: sCategory,
-    CategoryNames: sCategory,
-    ReleaseDate: new Date().toISOString()
-};
+            var oNewProduct = {
+                ID: iMaxID + 1,
+                Name: sName,
+                Description: sDescription,
+                Price: nPrice,
+                Rating: Number(fRating) || 0,
+            
+                Category: sCategory,
+                CategoryNames: sCategory,
+                ReleaseDate: new Date().toISOString()
+            };
             aSavedItems.push(oNewProduct);
 
             try {
@@ -1203,23 +2490,8 @@ var oNewProduct = {
             );
 
             MessageToast.show("Menu item added successfully.");
-        },
- 
-onShowAddMenuItem: function () {
-    var oPanel = this.byId("addMenuItemPanel");
-
-    if (!oPanel) {
-        MessageToast.show(
-            "Add Menu Item panel is missing from View1.view.xml."
-        );
-        return;
-    }
-
-    oPanel.setVisible(true);
-    oPanel.setExpanded(true);
 },
-
-onEditMenuItem: function (oEvent) {
+    onEditMenuItem: function (oEvent) {
     var oView = this.getView();
     var oContext = oEvent.getSource()
         .getBindingContext("products");
@@ -1405,8 +2677,7 @@ onEditMenuItem: function (oEvent) {
     oView.addDependent(oDialog);
     oDialog.open();
 },
-
-onDeleteMenuItem: function (oEvent) {
+    onDeleteMenuItem: function (oEvent) {
     var oView = this.getView();
     var oContext = oEvent.getSource()
         .getBindingContext("products");
@@ -1487,509 +2758,7 @@ onDeleteMenuItem: function (oEvent) {
         }
     );
 },
-
-
-        // 10. CUSTOMER ORDER TRACKING
-        onTrackOrder: function (oEvent) {
-            var oContext = oEvent.getSource()
-                .getBindingContext("orderData");
-
-            if (!oContext) {
-                MessageToast.show("Order details not found.");
-                return;
-            }
-
-            this.getView()
-                .getModel("selectedOrder")
-                .setData(Object.assign({}, oContext.getObject()));
-
-            this.getView().getModel("app")
-                .setProperty("/section", "customerTracking");
-        },
-
-        onTrackingBack: function () {
-            this._loadOrders();
-
-            this.getView().getModel("app")
-                .setProperty("/section", "customerOrders");
-        },
-        // 11. CUSTOMER ORDER CANCELLATION
-        onCancelOrder: function (oEvent) {
-            var oContext = oEvent.getSource()
-                .getBindingContext("orderData");
-
-            if (!oContext) {
-                MessageToast.show("Order not found.");
-                return;
-            }
-
-            var oOrder = oContext.getObject();
-
-            var aCancellableStatuses = [
-                "Placed",
-                "Accepted",
-                "Preparing",
-                "Packed"
-            ];
-
-            if (aCancellableStatuses.indexOf(oOrder.Status) === -1) {
-                MessageToast.show(
-                    "This order can no longer be cancelled."
-                );
-                return;
-            }
-
-            var that = this;
-
-            MessageBox.confirm(
-                "Are you sure you want to cancel order #" +
-                    oOrder.OrderID + "?",
-                {
-                    title: "Cancel Order",
-                    actions: [
-                        MessageBox.Action.YES,
-                        MessageBox.Action.NO
-                    ],
-                    emphasizedAction: MessageBox.Action.NO,
-
-                    onClose: function (sAction) {
-                        if (sAction !== MessageBox.Action.YES) {
-                            return;
-                        }
-
-                        var aOrders;
-
-                        try {
-                            aOrders = JSON.parse(
-                                localStorage.getItem("biteDashOrders") || "[]"
-                            );
-                        } catch (e) {
-                            MessageBox.error(
-                                "Could not read saved orders."
-                            );
-                            return;
-                        }
-
-                        var oSavedOrder = aOrders.find(function (oItem) {
-                            return String(oItem.OrderID) ===
-                                String(oOrder.OrderID);
-                        });
-
-                        if (
-                            !oSavedOrder ||
-                            aCancellableStatuses.indexOf(
-                                oSavedOrder.Status
-                            ) === -1
-                        ) {
-                            MessageToast.show(
-                                "This order can no longer be cancelled."
-                            );
-
-                            that._loadOrders();
-                            return;
-                        }
-
-                        oSavedOrder.Status = "Cancelled";
-
-                        try {
-                            localStorage.setItem(
-                                "biteDashOrders",
-                                JSON.stringify(aOrders)
-                            );
-                        } catch (e) {
-                            MessageBox.error(
-                                "Could not save the cancellation."
-                            );
-                            return;
-                        }
-
-                        that._loadOrders();
-
-                        MessageToast.show(
-                            "Order cancelled successfully."
-                        );
-                    }
-                }
-            );
-        },
-
-
-        
-_loadReturns: function () {
-    var aOrders = [];
-
-    try {
-        aOrders = JSON.parse(
-            localStorage.getItem("biteDashOrders") || "[]"
-        );
-    } catch (e) {
-        sap.m.MessageToast.show("Could not load return requests.");
-    }
-
-    var aReturns = aOrders
-        .filter(function (oOrder) {
-            return !!oOrder.ReturnStatus;
-        })
-        .map(function (oOrder) {
-            var aItems = oOrder.Items || [];
-
-            return Object.assign({}, oOrder, {
-                ItemSummary: oOrder.ItemSummary ||
-                    aItems.map(function (oItem) {
-                        return oItem.Name + " × " + oItem.Quantity;
-                    }).join(", "),
-                RefundAmount: Number(
-                    oOrder.RefundAmount != null
-                        ? oOrder.RefundAmount
-                        : oOrder.Total || 0
-                )
-            });
-        });
-
-    this.getView().getModel("returnData").setProperty(
-        "/items",
-        aReturns
-    );
-
-    this.getView().getModel("app").setProperty(
-        "/returnCount",
-        aReturns.filter(function (oReturn) {
-            return oReturn.ReturnStatus !== "Rejected" &&
-                oReturn.ReturnStatus !== "Refunded";
-        }).length
-    );
-    this._refreshBusinessHome();
-},
-
-
-onStartReturnRequest: function (oEvent) {
-    var oContext = oEvent.getSource().getBindingContext("orderData");
-
-    if (!oContext) {
-        sap.m.MessageToast.show("Please select a valid order.");
-        return;
-    }
-
-    var oOrder = Object.assign({}, oContext.getObject());
-
-    if (oOrder.Status !== "Delivered") {
-        sap.m.MessageToast.show(
-            "A return can only be requested for a delivered order."
-        );
-        return;
-    }
-
-    if (oOrder.ReturnStatus) {
-        sap.m.MessageToast.show(
-            "A return request already exists for this order."
-        );
-        return;
-    }
-
-    this.getView().getModel("selectedOrder").setData(oOrder);
-
-    this.byId("returnReasonSelect").setSelectedKey("Damaged");
-    this.byId("returnReasonDetails").setValue("");
-
-    this.getView().getModel("app").setProperty(
-        "/section",
-        "customerReturnRequest"
-    );
-},
-
-onCancelReturnRequest: function () {
-    this.getView().getModel("app").setProperty(
-        "/section",
-        "customerOrders"
-    );
-},
-
-onSubmitReturnRequest: function () {
-    var oSelectedOrder = this.getView()
-        .getModel("selectedOrder").getData();
-
-    var sReason = this.byId("returnReasonSelect").getSelectedKey();
-    var sDetails = this.byId("returnReasonDetails").getValue().trim();
-
-    if (!oSelectedOrder.OrderID || !sReason) {
-        sap.m.MessageToast.show("Please select a return reason.");
-        return;
-    }
-
-    var aOrders = [];
-
-    try {
-        aOrders = JSON.parse(
-            localStorage.getItem("biteDashOrders") || "[]"
-        );
-    } catch (e) {
-        sap.m.MessageBox.error("Unable to read saved orders.");
-        return;
-    }
-
-    var oOrder = aOrders.find(function (oItem) {
-        return String(oItem.OrderID) === String(oSelectedOrder.OrderID);
-    });
-
-    if (!oOrder || oOrder.Status !== "Delivered" || oOrder.ReturnStatus) {
-        sap.m.MessageBox.error(
-            "This order is not eligible for a new return request."
-        );
-        return;
-    }
-
-    oOrder.ReturnStatus = "Requested";
-    oOrder.ReturnReason = sReason;
-    oOrder.ReturnDetails = sDetails;
-    oOrder.ReturnRequestDate = new Date().toLocaleString();
-    oOrder.RefundAmount = Number(oOrder.Total || 0);
-    oOrder.RefundStatus = "Pending";
-
-    try {
-        localStorage.setItem("biteDashOrders", JSON.stringify(aOrders));
-    } catch (e) {
-        sap.m.MessageBox.error("Could not save the return request.");
-        return;
-    }
-
-    this._loadOrders();
-    this._loadReturns();
-
-    this.getView().getModel("app").setProperty(
-        "/section",
-        "customerOrders"
-    );
-
-    sap.m.MessageToast.show("Return request submitted successfully.");
-},
-
-_updateReturnStatus: function (oEvent, sNewStatus, sRefundStatus) {
-    var oContext = oEvent.getSource().getBindingContext("returnData");
-
-    if (!oContext) {
-        sap.m.MessageToast.show("Return request not found.");
-        return;
-    }
-
-    var oReturn = oContext.getObject();
-    var sOrderId = String(oReturn.OrderID);
-    var aOrders = [];
-
-    try {
-        aOrders = JSON.parse(
-            localStorage.getItem("biteDashOrders") || "[]"
-        );
-    } catch (e) {
-        sap.m.MessageBox.error("Unable to read saved orders.");
-        return;
-    }
-
-    var oOrder = aOrders.find(function (oItem) {
-        return String(oItem.OrderID) === sOrderId;
-    });
-
-    if (!oOrder || !oOrder.ReturnStatus) {
-        sap.m.MessageBox.error("The saved return request was not found.");
-        return;
-    }
-
-    var sCurrentStatus = oOrder.ReturnStatus;
-
-    var mAllowedTransitions = {
-        "Requested": ["Approved", "Rejected"],
-        "Approved": ["Pickup Scheduled"],
-        "Pickup Scheduled": ["Picked Up"],
-        "Picked Up": ["Refunded"]
-    };
-
-    if (
-        !mAllowedTransitions[sCurrentStatus] ||
-        mAllowedTransitions[sCurrentStatus].indexOf(sNewStatus) === -1
-    ) {
-        sap.m.MessageToast.show(
-            "This action is not available for the current return status."
-        );
-        return;
-    }
-
-    oOrder.ReturnStatus = sNewStatus;
-
-    if (sRefundStatus) {
-        oOrder.RefundStatus = sRefundStatus;
-    }
-
-    if (sNewStatus === "Rejected") {
-        oOrder.RefundStatus = "Not Applicable";
-    }
-
-    if (sNewStatus === "Pickup Scheduled") {
-        oOrder.ReturnPickupScheduledAt = new Date().toLocaleString();
-    }
-
-    if (sNewStatus === "Picked Up") {
-        oOrder.ReturnPickedUpAt = new Date().toLocaleString();
-    }
-
-    if (sNewStatus === "Refunded") {
-        oOrder.RefundStatus = "Completed";
-        oOrder.RefundCompletedAt = new Date().toLocaleString();
-    }
-
-    try {
-        localStorage.setItem("biteDashOrders", JSON.stringify(aOrders));
-    } catch (e) {
-        sap.m.MessageBox.error("Could not save the return update.");
-        return;
-    }
-
-    this._loadOrders();
-    this._loadReturns();
-
-    sap.m.MessageToast.show("Return status updated: " + sNewStatus);
-},
-
-onApproveReturn: function (oEvent) {
-    this._updateReturnStatus(oEvent, "Approved");
-},
-
-onRejectReturn: function (oEvent) {
-    this._updateReturnStatus(oEvent, "Rejected", "Not Applicable");
-},
-
-onScheduleReturnPickup: function (oEvent) {
-    this._updateReturnStatus(oEvent, "Pickup Scheduled");
-},
-
-onMarkReturnPickedUp: function (oEvent) {
-    this._updateReturnStatus(oEvent, "Picked Up");
-},
-
-onCompleteReturnRefund: function (oEvent) {
-    this._updateReturnStatus(oEvent, "Refunded", "Completed");
-},
-
-
-
-
-
-
-onMenuCategoryButton: function (oEvent) {
-    var sCategory = oEvent.getSource().data("category") || "All";
-
-    this._sMenuCategory = sCategory;
-
-    // Clear the previous product selection when changing category
-    var oTable = this.byId("foodMenuList");
-
-    if (oTable) {
-        oTable.removeSelections(true);
-    }
-
-    this._oSelectedMenuProduct = null;
-
-    this.getView()
-        .getModel("app")
-        .setProperty("/canAddSelectedProduct", false);
-
-    this._applyFoodFilters();
-},
-
-onMenuProductSelect: function (oEvent) {
-    var oTable = oEvent.getSource();
-    var oSelectedItem = oEvent.getParameter("listItem");
-
-    // Also support deselecting a previously selected row
-    if (!oSelectedItem || !oSelectedItem.getSelected()) {
-        oSelectedItem = oTable.getSelectedItem();
-    }
-
-    if (!oSelectedItem) {
-        this._oSelectedMenuProduct = null;
-        this.getView()
-            .getModel("app")
-            .setProperty("/canAddSelectedProduct", false);
-        return;
-    }
-
-    this._oSelectedMenuProduct = Object.assign(
-        {},
-        oSelectedItem.getBindingContext("products").getObject()
-    );
-
-    this.getView()
-        .getModel("app")
-        .setProperty("/canAddSelectedProduct", true);
-},
-
-_applyFoodFilters: function () {
-    var oTable = this.byId("foodMenuList");
-
-    if (!oTable) {
-        return;
-    }
-
-    var oBinding = oTable.getBinding("items");
-
-    if (!oBinding) {
-        return;
-    }
-
-    var Filter = sap.ui.model.Filter;
-    var FilterOperator = sap.ui.model.FilterOperator;
-    var aFilters = [];
-
-    // Search by product name or description
-    var sSearch = this.byId("foodSearchField")
-        ? this.byId("foodSearchField").getValue().trim()
-        : "";
-
-    if (sSearch) {
-        aFilters.push(new Filter({
-            filters: [
-                new Filter("Name", FilterOperator.Contains, sSearch),
-                new Filter("Description", FilterOperator.Contains, sSearch)
-            ],
-            and: false
-        }));
-    }
-
-    // Filter by the category selected on the left
-    var sCategory = this._sMenuCategory || "All";
-
-    if (sCategory !== "All") {
-        aFilters.push(new Filter({
-            filters: [
-                new Filter("Category", FilterOperator.EQ, sCategory),
-                new Filter("CategoryNames", FilterOperator.Contains, sCategory)
-            ],
-            and: false
-        }));
-    }
-
-    oBinding.filter(aFilters);
-},
-
-
-_getProductEntitySet: function () {
-    var oModel = this.getOwnerComponent().getModel();
-    var oMetaModel = oModel.getMetaModel();
-    var oEntityContainer = oMetaModel.getODataEntityContainer();
-
-    if (!oEntityContainer ||
-        !oEntityContainer.entitySet) {
-        return null;
-    }
-
-    var oEntitySet = oEntityContainer.entitySet.find(
-        function (oSet) {
-            return oSet.name === "Products";
-        }
-    );
-
-    return oEntitySet || null;
-},
-
-onUpdateProduct: function () {
+    onUpdateProduct: function () {
     var oProduct = this._oSelectedMenuProduct;
     var oModel = this.getOwnerComponent().getModel();
 
@@ -2112,8 +2881,7 @@ onUpdateProduct: function () {
 
     oDialog.open();
 },
-
-onDeleteProduct: function () {
+    onDeleteProduct: function () {
     var that = this;
     var oProduct = this._oSelectedMenuProduct;
 
@@ -2212,592 +2980,25 @@ onDeleteProduct: function () {
         }
     );
 },
+    _getProductEntitySet: function () {
+    var oModel = this.getOwnerComponent().getModel();
+    var oMetaModel = oModel.getMetaModel();
+    var oEntityContainer = oMetaModel.getODataEntityContainer();
 
-_showODataError: function (sAction, oError) {
-    var sMessage = "No detailed error was returned.";
-    var sStatus = "";
-    var sResponse = "";
-
-    if (oError) {
-        sStatus = oError.statusCode ||
-            oError.status ||
-            "";
-
-        sResponse = oError.responseText ||
-            (oError.response &&
-             oError.response.body) ||
-            "";
-
-        if (sResponse) {
-            try {
-                var oResponse = JSON.parse(sResponse);
-                var vError = oResponse.error;
-
-                if (vError) {
-                    if (typeof vError.message === "string") {
-                        sMessage = vError.message;
-                    } else if (vError.message &&
-                               vError.message.value) {
-                        sMessage = vError.message.value;
-                    } else {
-                        sMessage = JSON.stringify(vError);
-                    }
-                } else {
-                    sMessage = sResponse;
-                }
-            } catch (e) {
-                sMessage = sResponse;
-            }
-        } else if (oError.message) {
-            sMessage = oError.message;
-        }
+    if (!oEntityContainer ||
+        !oEntityContainer.entitySet) {
+        return null;
     }
 
-    sap.m.MessageBox.error(
-        sAction + " failed." +
-        (sStatus ? "\nHTTP status: " + sStatus : "") +
-        "\n\n" + sMessage
-    );
-},
-
-onSelectCustomerOrder: function (oEvent) {
-    var oItem = oEvent.getSource();
-    var oContext = oItem.getBindingContext("orderData");
-
-    if (!oContext) {
-        return;
-    }
-
-    var oOrder = oContext.getObject();
-    var oSelectedOrderModel = this.getView().getModel("selectedOrder");
-
-    if (!oSelectedOrderModel) {
-        sap.m.MessageBox.error("Selected order model not found.");
-        return;
-    }
-
-    // Show the clicked order in the right-side details panel.
-    oSelectedOrderModel.setData(
-        Object.assign({}, oOrder)
-    );
-},
-
-
-onAdvanceSelectedOrderStatus: function () {
-    var oView = this.getView();
-    var oSelectedModel = oView.getModel("selectedOrder");
-    var oSelectedOrder = oSelectedModel.getData();
-
-    if (!oSelectedOrder || oSelectedOrder.OrderID == null) {
-        MessageToast.show("Please select an order first.");
-        return;
-    }
-
-    var aStatuses = [
-        "Placed",
-        "Accepted",
-        "Preparing",
-        "Packed",
-        "Picked Up",
-        "On The Way",
-        "Delivered"
-    ];
-
-    if (oSelectedOrder.Status === "Cancelled") {
-        MessageToast.show("Cancelled orders cannot be updated.");
-        return;
-    }
-
-    if (oSelectedOrder.Status === "Delivered") {
-        MessageToast.show("This order is already delivered.");
-        return;
-    }
-
-    var aOrders = [];
-
-    try {
-        aOrders = JSON.parse(
-            localStorage.getItem("biteDashOrders") || "[]"
-        );
-
-        if (!Array.isArray(aOrders)) {
-            aOrders = [];
-        }
-    } catch (e) {
-        MessageBox.error("Could not read saved orders.");
-        return;
-    }
-
-    var oSavedOrder = aOrders.find(function (oOrder) {
-        return String(oOrder.OrderID) ===
-            String(oSelectedOrder.OrderID);
-    });
-
-    if (!oSavedOrder) {
-        MessageBox.error("Selected order was not found.");
-        return;
-    }
-
-    var iCurrentIndex = aStatuses.indexOf(oSavedOrder.Status);
-
-    if (iCurrentIndex === -1) {
-        MessageBox.error("Unknown order status.");
-        return;
-    }
-
-    // Advance to the next status
-    oSavedOrder.Status = aStatuses[iCurrentIndex + 1];
-
-    try {
-        localStorage.setItem(
-            "biteDashOrders",
-            JSON.stringify(aOrders)
-        );
-    } catch (e) {
-        MessageBox.error("Could not save the updated order.");
-        return;
-    }
-
-    // Refresh the order list and dashboard counts
-    this._loadOrders();
-
-    // Keep the currently selected order visible on the right
-    var oUpdatedOrder = Object.assign({}, oSavedOrder);
-
-    oSelectedModel.setData(oUpdatedOrder);
-
-    MessageToast.show(
-        "Order status updated to " + oSavedOrder.Status
-    );
-},
-
-
-
-
-
-_prepareOrderedProducts: function () {
-    var oOrdersModel = this.getView().getModel("orderData");
-    var oProductsModel = this.getView().getModel("products");
-
-    var aOrders = oOrdersModel.getProperty("/items") || [];
-    var aProducts = oProductsModel.getProperty("/items") || [];
-
-    var aOrderedProducts = aOrders.map(function (oOrder) {
-        var aItems = (oOrder.Items || []).map(function (oItem) {
-            var oProduct = aProducts.find(function (p) {
-                return String(p.ID) === String(oItem.ID);
-            }) || {};
-
-            return {
-                ID: oItem.ID,
-                Name: oItem.Name || oProduct.Name || "Product",
-               Description: oItem.Description || oProduct.Description || "No description available",
-
-Rating: Number(oItem.Rating) > 0
-    ? Number(oItem.Rating)
-    : (Number(oProduct.Rating) || 0),
-                Price: Number(oItem.Price) || 0,
-                Quantity: Number(oItem.Quantity) || 1
-            };
-        });
-
-        var nTotal = aItems.reduce(function (nSum, oItem) {
-            return nSum + oItem.Price * oItem.Quantity;
-        }, 0);
-
-        return {
-            OrderID: oOrder.OrderID,
-            OrderDate: oOrder.OrderDate,
-            CustomerName: oOrder.CustomerName,
-            Address: oOrder.Address, // ADD THIS LINE
-            PaymentMethod: oOrder.PaymentMethod,
-            Status: oOrder.Status,
-            ReturnStatus: oOrder.ReturnStatus || "",
-            Items: aItems,
-            ItemSummary: aItems.map(function (oItem) {
-                return oItem.Name + " × " + oItem.Quantity;
-            }).join(", "),
-            Total: Number(oOrder.Total) || nTotal
-        };
-    });
-
-    this.getView().getModel("orderedProducts").setProperty(
-        "/items",
-        aOrderedProducts
-    );
-
-    var oSelectedModel = this.getView().getModel("selectedOrderedProduct");
-    var oSelected = oSelectedModel.getData();
-
-    if (oSelected && oSelected.OrderID) {
-        var oUpdated = aOrderedProducts.find(function (oOrder) {
-            return String(oOrder.OrderID) === String(oSelected.OrderID);
-        });
-
-        if (oUpdated) {
-            oSelectedModel.setData(
-                Object.assign({}, oUpdated)
-            );
-
-            this.getView().getModel("selectedOrder").setData(
-                Object.assign({}, oUpdated)
-            );
-        }
-    }
-},
-
-
-onOrderedProductSelect: function (oEvent) {
-    var oContext = oEvent.getSource()
-        .getBindingContext("orderedProducts");
-
-    if (!oContext) {
-        return;
-    }
-
-    var oOrder = oContext.getObject();
-
-    this.getView()
-        .getModel("selectedOrderedProduct")
-        .setData(Object.assign({}, oOrder));
-
-    // Keep the existing tracking and return workflows compatible.
-    this.getView()
-        .getModel("selectedOrder")
-        .setData(Object.assign({}, oOrder));
-},
-
-
-
-onTrackSelectedOrder: function () {
-    var oView = this.getView();
-
-    var oSelected = oView
-        .getModel("selectedOrderedProduct")
-        .getData();
-
-    if (!oSelected || oSelected.OrderID == null) {
-        MessageToast.show("Please select an order first.");
-        return;
-    }
-
-    // Seven tracking statuses
-    var aStatuses = [
-        "Placed",
-        "Approved",
-        "Prepared",
-        "Packed",
-        "Picked Up",
-        "On The Way",
-        "Delivered"
-    ];
-
-    var aIcons = [
-        "sap-icon://cart",
-        "sap-icon://accept",
-        "sap-icon://meal",
-        "sap-icon://product",
-        "sap-icon://shipping-status",
-        "sap-icon://journey-arrive",
-        "sap-icon://flag"
-    ];
-
-    // Convert actual order statuses into tracking statuses
-    var sStatus = oSelected.Status || "Placed";
-
-    var oStatusMap = {
-        "Accepted": "Approved",
-        "Preparing": "Prepared"
-    };
-
-    sStatus = oStatusMap[sStatus] || sStatus;
-
-    // Find the current tracking position
-    var iCurrentIndex = aStatuses.indexOf(sStatus);
-
-    // Handle cancelled orders without marking any lane completed
-    var bCancelled = sStatus === "Cancelled";
-
-    if (bCancelled) {
-        iCurrentIndex = -1;
-    } else if (iCurrentIndex < 0) {
-        iCurrentIndex = 0;
-        sStatus = "Placed";
-    }
-
-    // Create seven lane headers
-    var aLanes = aStatuses.map(function (sLabel, iIndex) {
-        return {
-            id: String(iIndex + 1),
-            label: sLabel,
-            icon: aIcons[iIndex],
-            position: iIndex
-        };
-    });
-
-    // Create seven nodes to control lane colors
-    var aNodes = aStatuses.map(function (sLabel, iIndex) {
-        var bCompleted = !bCancelled &&
-            iIndex <= iCurrentIndex;
-
-        return {
-            id: String(iIndex + 1),
-            lane: String(iIndex + 1),
-            title: sLabel,
-
-            // Completed/current lanes green; remaining lanes grey
-            state: bCompleted ? "Positive" : "Neutral",
-
-            stateText: bCompleted ? "Completed" : "Pending",
-            texts: [
-                bCompleted ? "Completed" : "Pending"
-            ],
-
-            // Connect each step to the next
-            children: iIndex < aStatuses.length - 1
-                ? [String(iIndex + 2)]
-                : []
-        };
-    });
-
-    // Prepare ordered items
-    var aItems = (oSelected.Items || []).map(function (oItem) {
-        return {
-            name: oItem.Name || "Food item",
-            qty: Number(oItem.Quantity) || 1,
-            price: Number(oItem.Price) || 0,
-            notes: oItem.Description || ""
-        };
-    });
-
-    // Calculate item subtotal
-    var fSubtotal = aItems.reduce(function (fTotal, oItem) {
-        return fTotal + oItem.price * oItem.qty;
-    }, 0);
-
-    var fTotal = Number(oSelected.Total);
-
-    if (!isFinite(fTotal)) {
-        fTotal = fSubtotal;
-    }
-
-    // Update tracking model
-    oView.getModel("trackOrder").setData({
-        orderId: oSelected.OrderID,
-        status: sStatus,
-        customerName: oSelected.CustomerName || "",
-        address: oSelected.Address || "",
-        paymentMode: oSelected.PaymentMethod || "Cash on Delivery",
-
-        lanes: aLanes,
-        nodes: aNodes,
-
-        steps: aStatuses.map(function (sLabel, iIndex) {
-            var bDone = !bCancelled &&
-                iIndex <= iCurrentIndex;
-
-            return {
-                name: sLabel,
-                done: bDone,
-                last: iIndex === aStatuses.length - 1,
-                time: bDone ? "Completed" : "Pending"
-            };
-        }),
-
-        items: aItems,
-
-        bill: {
-            subtotal: fSubtotal,
-            deliveryFee: 0,
-            tax: 0,
-            total: fTotal
-        }
-    });
-
-    // Keep existing selected order details synchronized
-    oView.getModel("selectedOrder").setData(
-        Object.assign({}, oSelected)
-    );
-
-    // Open tracking page
-    oView.getModel("app").setProperty(
-        "/section",
-        "customerTracking"
-    );
-},
-
-
-
-
-
-
-
-
-
-onCancelSelectedOrder: function () {
-    var that = this;
-    var oSelected = this.getView()
-        .getModel("selectedOrderedProduct")
-        .getData();
-
-    if (!oSelected || oSelected.OrderID == null) {
-        MessageToast.show("Please select an order first.");
-        return;
-    }
-
-    var aCancellableStatuses = [
-        "Placed",
-        "Accepted",
-        "Preparing",
-        "Packed"
-    ];
-
-    if (aCancellableStatuses.indexOf(oSelected.Status) === -1) {
-        MessageToast.show("This order can no longer be cancelled.");
-        return;
-    }
-
-    MessageBox.confirm(
-        "Are you sure you want to cancel order #" +
-            oSelected.OrderID + "?",
-        {
-            title: "Cancel Order",
-            actions: [
-                MessageBox.Action.YES,
-                MessageBox.Action.NO
-            ],
-            emphasizedAction: MessageBox.Action.NO,
-
-            onClose: function (sAction) {
-                if (sAction !== MessageBox.Action.YES) {
-                    return;
-                }
-
-                var aOrders;
-
-                try {
-                    aOrders = JSON.parse(
-                        localStorage.getItem("biteDashOrders") || "[]"
-                    );
-
-                    if (!Array.isArray(aOrders)) {
-                        aOrders = [];
-                    }
-                } catch (e) {
-                    MessageBox.error("Could not read saved orders.");
-                    return;
-                }
-
-                var oSavedOrder = aOrders.find(function (oOrder) {
-                    return String(oOrder.OrderID) ===
-                        String(oSelected.OrderID);
-                });
-
-                // Recheck the saved status before cancelling.
-                if (!oSavedOrder ||
-                    aCancellableStatuses.indexOf(oSavedOrder.Status) === -1) {
-                    MessageToast.show(
-                        "This order can no longer be cancelled."
-                    );
-                    that._loadOrders();
-                    return;
-                }
-
-                oSavedOrder.Status = "Cancelled";
-
-                try {
-                    localStorage.setItem(
-                        "biteDashOrders",
-                        JSON.stringify(aOrders)
-                    );
-                } catch (e) {
-                    MessageBox.error("Could not save the cancellation.");
-                    return;
-                }
-
-                that._loadOrders();
-
-                MessageToast.show("Order cancelled successfully.");
-            }
+    var oEntitySet = oEntityContainer.entitySet.find(
+        function (oSet) {
+            return oSet.name === "Products";
         }
     );
+
+    return oEntitySet || null;
 },
-
-onReturnSelectedOrder: function () {
-    var oSelected = this.getView()
-        .getModel("selectedOrderedProduct")
-        .getData();
-
-    if (!oSelected || oSelected.OrderID == null) {
-        MessageToast.show("Please select an order first.");
-        return;
-    }
-
-    if (oSelected.Status !== "Delivered") {
-        MessageToast.show(
-            "A return can only be requested for a delivered order."
-        );
-        return;
-    }
-
-    if (oSelected.ReturnStatus) {
-        MessageToast.show(
-            "A return request already exists for this order."
-        );
-        return;
-    }
-
-    this.getView()
-        .getModel("selectedOrder")
-        .setData(Object.assign({}, oSelected));
-
-    this.byId("returnReasonSelect").setSelectedKey("Damaged");
-    this.byId("returnReasonDetails").setValue("");
-
-    this.getView()
-        .getModel("app")
-        .setProperty("/section", "customerReturnRequest");
-},
-
-
-
-onOrderSelect: function (oEvent) {
-    var oListItem = oEvent.getParameter("listItem");
-
-    if (!oListItem) {
-        oListItem = oEvent.getSource().getSelectedItem();
-    }
-
-    if (!oListItem) {
-        return;
-    }
-
-    var oContext = oListItem.getBindingContext("orderData");
-
-    if (!oContext) {
-        return;
-    }
-
-    var oOrder = oContext.getObject();
-    var oSelectedOrderModel = this.getView().getModel("selectedOrder");
-
-    if (!oSelectedOrderModel) {
-        sap.m.MessageBox.error("Selected order model not found.");
-        return;
-    }
-
-    oSelectedOrderModel.setData(
-        Object.assign({}, oOrder)
-    );
-},
-
-//onShowAddMenuItem: function () {
-  //  this.byId("addMenuItemPanel").setExpanded(true);
-//},
-
-
-
-onMenuCategoryFilter: function (oEvent) {
+    onMenuCategoryFilter: function (oEvent) {
     var oItem = oEvent.getParameter("item");
     var sKey = oItem ? oItem.getKey() : "all";
 
@@ -2809,7 +3010,7 @@ onMenuCategoryFilter: function (oEvent) {
         oSearchField ? oSearchField.getValue() : ""
     );
 },
-onBusinessMenuSearch: function (oEvent) {
+    onBusinessMenuSearch: function (oEvent) {
     var sQuery = oEvent.getParameter("newValue");
 
     // The search event uses "query" instead of "newValue"
@@ -2819,8 +3020,7 @@ onBusinessMenuSearch: function (oEvent) {
 
     this._applyBusinessMenuFilters(sQuery);
 },
-
-_applyBusinessMenuFilters: function (sQuery) {
+    _applyBusinessMenuFilters: function (sQuery) {
     var oMenu = this.byId("businessMenuList");
 
     if (!oMenu) {
@@ -2879,78 +3079,927 @@ _applyBusinessMenuFilters: function (sQuery) {
     oBinding.filter(aFilters);
 },
 
-onDeleteSelectedOrder: function () {
-    var oView = this.getView();
-    var oSelectedOrderModel = oView.getModel("selectedOrder");
-    var oOrderDataModel = oView.getModel("orderData");
+//13.RETURN MANAGEMENT (CUSTOMER)
+    onStartReturnRequest: function (oEvent) {
+    var oContext = oEvent.getSource().getBindingContext("orderData");
 
-    var oSelectedOrder = oSelectedOrderModel.getData();
-
-    if (!oSelectedOrder || oSelectedOrder.OrderID == null) {
-        sap.m.MessageToast.show("Please select an order to delete.");
+    if (!oContext) {
+        sap.m.MessageToast.show("Please select a valid order.");
         return;
     }
 
+    var oOrder = Object.assign({}, oContext.getObject());
+
+    if (oOrder.Status !== "Delivered") {
+        sap.m.MessageToast.show(
+            "A return can only be requested for a delivered order."
+        );
+        return;
+    }
+
+    if (oOrder.ReturnStatus) {
+        sap.m.MessageToast.show(
+            "A return request already exists for this order."
+        );
+        return;
+    }
+
+    this.getView().getModel("selectedOrder").setData(oOrder);
+
+    this.byId("returnReasonSelect").setSelectedKey("Damaged");
+    this.byId("returnReasonDetails").setValue("");
+
+    this.getView().getModel("app").setProperty(
+        "/section",
+        "customerReturnRequest"
+    );
+},
+    onReturnSelectedOrder: function () {
+    var oSelected = this.getView()
+        .getModel("selectedOrderedProduct")
+        .getData();
+
+    if (!oSelected || oSelected.OrderID == null) {
+        MessageToast.show("Please select an order first.");
+        return;
+    }
+
+    if (oSelected.Status !== "Delivered") {
+        MessageToast.show(
+            "A return can only be requested for a delivered order."
+        );
+        return;
+    }
+
+    if (oSelected.ReturnStatus) {
+        MessageToast.show(
+            "A return request already exists for this order."
+        );
+        return;
+    }
+
+    this.getView()
+        .getModel("selectedOrder")
+        .setData(Object.assign({}, oSelected));
+
+    this.byId("returnReasonSelect").setSelectedKey("Damaged");
+    this.byId("returnReasonDetails").setValue("");
+
+    this.getView()
+        .getModel("app")
+        .setProperty("/section", "customerReturnRequest");
+},
+
+    onCancelReturnRequest: function () {
+    this.getView().getModel("app").setProperty(
+        "/section",
+        "customerOrders"
+    );
+},
+
+    onSubmitReturnRequest: function () {
+    var oSelectedOrder = this.getView()
+        .getModel("selectedOrder").getData();
+
+    var sReason = this.byId("returnReasonSelect").getSelectedKey();
+    var sDetails = this.byId("returnReasonDetails").getValue().trim();
+
+    if (!oSelectedOrder.OrderID || !sReason) {
+        sap.m.MessageToast.show("Please select a return reason.");
+        return;
+    }
+
+    var aOrders = [];
+
+    try {
+        aOrders = JSON.parse(
+            localStorage.getItem("biteDashOrders") || "[]"
+        );
+    } catch (e) {
+        sap.m.MessageBox.error("Unable to read saved orders.");
+        return;
+    }
+
+    var oOrder = aOrders.find(function (oItem) {
+        return String(oItem.OrderID) === String(oSelectedOrder.OrderID);
+    });
+
+    if (!oOrder || oOrder.Status !== "Delivered" || oOrder.ReturnStatus) {
+        sap.m.MessageBox.error(
+            "This order is not eligible for a new return request."
+        );
+        return;
+    }
+
+    oOrder.ReturnStatus = "Requested";
+    oOrder.ReturnReason = sReason;
+    oOrder.ReturnDetails = sDetails;
+    oOrder.ReturnRequestDate = new Date().toLocaleString();
+    oOrder.RefundAmount = Number(oOrder.Total || 0);
+    oOrder.RefundStatus = "Pending";
+
+    try {
+        localStorage.setItem("biteDashOrders", JSON.stringify(aOrders));
+    } catch (e) {
+        sap.m.MessageBox.error("Could not save the return request.");
+        return;
+    }
+
+    this._loadOrders();
+    this._loadReturns();
+
+    this.getView().getModel("app").setProperty(
+        "/section",
+        "customerOrders"
+    );
+
+    sap.m.MessageToast.show("Return request submitted successfully.");
+},
+
+//14.RETURN MANAGEMENT (BUSINESS)
+    onApproveReturn: function (oEvent) {
+    this._updateReturnStatus(oEvent, "Approved");
+},
+    onRejectReturn: function (oEvent) {
+    this._updateReturnStatus(oEvent, "Rejected", "Not Applicable");
+},
+    onScheduleReturnPickup: function (oEvent) {
+    this._updateReturnStatus(oEvent, "Pickup Scheduled");
+},
+    onMarkReturnPickedUp: function (oEvent) {
+    this._updateReturnStatus(oEvent, "Picked Up");
+},
+    onCompleteReturnRefund: function (oEvent) {
+    this._updateReturnStatus(oEvent, "Refunded", "Completed");
+},
+    _updateReturnStatus: function (oEvent, sNewStatus, sRefundStatus) {
+    var oContext = oEvent.getSource().getBindingContext("returnData");
+
+    if (!oContext) {
+        sap.m.MessageToast.show("Return request not found.");
+        return;
+    }
+
+    var oReturn = oContext.getObject();
+    var sOrderId = String(oReturn.OrderID);
+    var aOrders = [];
+
+    try {
+        aOrders = JSON.parse(
+            localStorage.getItem("biteDashOrders") || "[]"
+        );
+    } catch (e) {
+        sap.m.MessageBox.error("Unable to read saved orders.");
+        return;
+    }
+
+    var oOrder = aOrders.find(function (oItem) {
+        return String(oItem.OrderID) === sOrderId;
+    });
+
+    if (!oOrder || !oOrder.ReturnStatus) {
+        sap.m.MessageBox.error("The saved return request was not found.");
+        return;
+    }
+
+    var sCurrentStatus = oOrder.ReturnStatus;
+
+    var mAllowedTransitions = {
+        "Requested": ["Approved", "Rejected"],
+        "Approved": ["Pickup Scheduled"],
+        "Pickup Scheduled": ["Picked Up"],
+        "Picked Up": ["Refunded"]
+    };
+
+    if (
+        !mAllowedTransitions[sCurrentStatus] ||
+        mAllowedTransitions[sCurrentStatus].indexOf(sNewStatus) === -1
+    ) {
+        sap.m.MessageToast.show(
+            "This action is not available for the current return status."
+        );
+        return;
+    }
+
+    oOrder.ReturnStatus = sNewStatus;
+
+    if (sRefundStatus) {
+        oOrder.RefundStatus = sRefundStatus;
+    }
+
+    if (sNewStatus === "Rejected") {
+        oOrder.RefundStatus = "Not Applicable";
+    }
+
+    if (sNewStatus === "Pickup Scheduled") {
+        oOrder.ReturnPickupScheduledAt = new Date().toLocaleString();
+    }
+
+    if (sNewStatus === "Picked Up") {
+        oOrder.ReturnPickedUpAt = new Date().toLocaleString();
+    }
+
+    if (sNewStatus === "Refunded") {
+        oOrder.RefundStatus = "Completed";
+        oOrder.RefundCompletedAt = new Date().toLocaleString();
+    }
+
+    try {
+        localStorage.setItem("biteDashOrders", JSON.stringify(aOrders));
+    } catch (e) {
+        sap.m.MessageBox.error("Could not save the return update.");
+        return;
+    }
+
+    this._loadOrders();
+    this._loadReturns();
+
+    sap.m.MessageToast.show("Return status updated: " + sNewStatus);
+},
+
+//15.RETURN SEARCH & FILTERS
+
+onReturnSearch: function (oEvent) {
+
+    var sSearch = oEvent.getParameter("newValue");
+
+    // When Search is triggered by Enter or the search icon
+    if (sSearch === undefined) {
+        sSearch = oEvent.getParameter("query");
+    }
+
+    // Fallback to the SearchField's current value
+    if (sSearch === undefined) {
+        sSearch = oEvent.getSource().getValue();
+    }
+
+    this._sReturnSearch = (sSearch || "").trim().toLowerCase();
+
+    this._applyReturnFilters();
+
+},
+onReturnFilter: function (oEvent) {
+
+    this._sReturnFilter =
+        oEvent.getParameter("key") || "all";
+
+    this._applyReturnFilters();
+
+},
+_applyReturnFilters: function () {
+
+    // Always use the original complete returns array
+    var aReturns = this._aAllReturns || [];
+
+    var sSearch = this._sReturnSearch || "";
+    var sFilter = this._sReturnFilter || "all";
+
+    var aFiltered = aReturns.filter(function (oReturn) {
+
+        // Search by Order ID, Customer Name or Item
+        var sOrderID = String(oReturn.OrderID || "").toLowerCase();
+        var sCustomer = String(oReturn.CustomerName || "").toLowerCase();
+        var sItem = String(oReturn.ItemSummary || "").toLowerCase();
+
+        var bMatchesSearch =
+            !sSearch ||
+            sOrderID.indexOf(sSearch) !== -1 ||
+            sCustomer.indexOf(sSearch) !== -1 ||
+            sItem.indexOf(sSearch) !== -1;
+
+        // Filter by return status
+        var sStatus = oReturn.ReturnStatus;
+        var bMatchesFilter = true;
+
+        switch (sFilter) {
+
+            case "needs":
+                bMatchesFilter = sStatus === "Requested";
+                break;
+
+            case "pickup":
+                bMatchesFilter =
+                    sStatus === "Pickup Scheduled" ||
+                    sStatus === "Picked Up";
+                break;
+
+            case "refunded":
+                bMatchesFilter = sStatus === "Refunded";
+                break;
+
+            case "rejected":
+                bMatchesFilter = sStatus === "Rejected";
+                break;
+
+            case "all":
+            default:
+                bMatchesFilter = true;
+                break;
+        }
+
+        return bMatchesSearch && bMatchesFilter;
+
+    });
+
+    // Update only the displayed list
+    this.getView()
+        .getModel("returnData")
+        .setProperty("/items", aFiltered);
+
+},
+    onToggleReturn: function (oEvent) {
+
+    var oContext = oEvent.getSource()
+        .getBindingContext("returnData");
+
+    if (!oContext) {
+        return;
+    }
+
+    var oModel = this.getView().getModel("returnData");
+    var sPath = oContext.getPath();
+
+    var bExpanded = oModel.getProperty(
+        sPath + "/expanded"
+    );
+
+    oModel.setProperty(
+        sPath + "/expanded",
+        !bExpanded
+    );
+
+}, 
+
+
+//16.QUICK ACTIONS
+    onReviewNewOrders: function () {
+
+    this.getView()
+        .getModel("app")
+        .setProperty("/section", "businessOrders");
+
+},
+    onReviewReturns: function () {
+
+    this.getView()
+        .getModel("app")
+        .setProperty("/section", "businessReturns");
+
+},
+    onQuickAddProduct: function () {
+
+    this.getView()
+        .getModel("app")
+        .setProperty("/section", "businessMenu");
+
+},
+    onQuickManageOrders: function () {
+
+    this.getView()
+        .getModel("app")
+        .setProperty("/section", "businessOrders");
+
+},
+    onQuickReturns: function () {
+
+    this.getView()
+        .getModel("app")
+        .setProperty("/section", "businessReturns");
+
+},
+    onQuickReports: function () {
+
+     MessageToast.show("Reports section is coming soon!");
+
+},
+
+//17.COMMON UTILITIES
+    _showODataError: function (sAction, oError) {
+    var sMessage = "No detailed error was returned.";
+    var sStatus = "";
+    var sResponse = "";
+
+    if (oError) {
+        sStatus = oError.statusCode ||
+            oError.status ||
+            "";
+
+        sResponse = oError.responseText ||
+            (oError.response &&
+             oError.response.body) ||
+            "";
+
+        if (sResponse) {
+            try {
+                var oResponse = JSON.parse(sResponse);
+                var vError = oResponse.error;
+
+                if (vError) {
+                    if (typeof vError.message === "string") {
+                        sMessage = vError.message;
+                    } else if (vError.message &&
+                               vError.message.value) {
+                        sMessage = vError.message.value;
+                    } else {
+                        sMessage = JSON.stringify(vError);
+                    }
+                } else {
+                    sMessage = sResponse;
+                }
+            } catch (e) {
+                sMessage = sResponse;
+            }
+        } else if (oError.message) {
+            sMessage = oError.message;
+        }
+    }
+
+    sap.m.MessageBox.error(
+        sAction + " failed." +
+        (sStatus ? "\nHTTP status: " + sStatus : "") +
+        "\n\n" + sMessage
+    );
+},
+
+//LOGIN FUNCTIONALITY
+
+
+
+
+onLogin: function () {
+
+    var oView = this.getView();
+
+    var sUsername = oView.byId("usernameInput").getValue().trim();
+    var sPassword = oView.byId("passwordInput").getValue();
+    var sSelectedRole = oView.byId("roleSelector").getSelectedKey();
+
+    // IMPORTANT: Use View-level model for XML page bindings
+    var oAppModel = oView.getModel("app");
+
+    // Get demo users from Component model
+    var oComponentModel = this.getOwnerComponent().getModel("app");
+    var aUsers = oComponentModel.getProperty("/users") || [];
+
+    if (!sUsername || !sPassword) {
+        MessageBox.error("Please enter username and password");
+        return;
+    }
+
+    var sLoginRole = sSelectedRole === "restaurant"
+        ? "business"
+        : sSelectedRole;
+
+    var oUser = aUsers.find(function (oUser) {
+
+        var sUserRole = oUser.role === "restaurant"
+            ? "business"
+            : oUser.role;
+
+        return (
+            oUser.username === sUsername &&
+            oUser.password === sPassword &&
+            sUserRole === sLoginRole
+        );
+    });
+
+    if (!oUser) {
+        MessageBox.error("Invalid username, password or role");
+        return;
+    }
+
+    // Update the SAME model used by XML
+    oAppModel.setProperty("/currentUser", oUser.username);
+    oAppModel.setProperty("/isLoggedIn", true);
+    oAppModel.setProperty("/role", sLoginRole);
+
+    oAppModel.setProperty(
+        "/section",
+        sLoginRole === "customer"
+            ? "customerHome"
+            : "businessHome"
+    );
+
+    oView.byId("usernameInput").setValue("");
+    oView.byId("passwordInput").setValue("");
+
+    MessageToast.show(
+        sLoginRole === "customer"
+            ? "Welcome to BiteDash!"
+            : "Welcome to Restaurant Console!"
+    );
+},
+
+onLogout: function () {
+
+    // Use the same View-level model
+    var oAppModel = this.getView().getModel("app");
+
+    oAppModel.setProperty("/isLoggedIn", false);
+    oAppModel.setProperty("/currentUser", null);
+    oAppModel.setProperty("/role", "customer");
+    oAppModel.setProperty("/section", "customerHome");
+
+    MessageToast.show("Logged Out");
+},
+
+
+onTogglePasswordVisibility: function () {
+
+    var oPasswordInput = this.getView().byId("passwordInput");
+
+    var bVisible = oPasswordInput.getType() === "Text";
+
+    oPasswordInput.setType(bVisible ? "Password" : "Text");
+
+    oPasswordInput.setValueHelpIconSrc(
+        bVisible ? "sap-icon://show" : "sap-icon://hide"
+    );
+},
+
+onOpenDelayDialog: function () {
+    var oOrder = this.getView()
+        .getModel("selectedOrder")
+        .getData();
+
+    if (!oOrder || oOrder.OrderID == null) {
+        MessageToast.show("Please select an order.");
+        return;
+    }
+
+    this.byId("delayReasonSelect")
+        .setSelectedKey("Preparation taking longer");
+
+    this.byId("delayMinutesSelect")
+        .setSelectedKey("15");
+
+    this.byId("delayOrderDialog").open();
+},
+
+onCloseDelayDialog: function () {
+    this.byId("delayOrderDialog").close();
+},
+
+onOpenFlagDialog: function () {
+    var oOrder = this.getView()
+        .getModel("selectedOrder")
+        .getData();
+
+    if (!oOrder || oOrder.OrderID == null) {
+        MessageToast.show("Please select an order.");
+        return;
+    }
+
+    this.byId("flagReasonSelect")
+        .setSelectedKey("Item unavailable");
+
+    this.byId("flagDescriptionInput").setValue("");
+
+    this.byId("flagOrderDialog").open();
+},
+
+onCloseFlagDialog: function () {
+    this.byId("flagOrderDialog").close();
+},
+
+_updateSelectedOrder: function (fnUpdate) {
+    var oSelectedModel = this.getView()
+        .getModel("selectedOrder");
+
+    var oSelectedOrder = oSelectedModel.getData();
+
+    if (!oSelectedOrder || oSelectedOrder.OrderID == null) {
+        MessageToast.show("Please select an order.");
+        return false;
+    }
+
+    var aOrders;
+
+    try {
+        aOrders = JSON.parse(
+            localStorage.getItem("biteDashOrders") || "[]"
+        );
+
+        if (!Array.isArray(aOrders)) {
+            aOrders = [];
+        }
+    } catch (e) {
+        MessageBox.error("Could not read saved orders.");
+        return false;
+    }
+
+    var oSavedOrder = aOrders.find(function (oOrder) {
+        return String(oOrder.OrderID) ===
+            String(oSelectedOrder.OrderID);
+    });
+
+    if (!oSavedOrder) {
+        MessageBox.error("Selected order was not found.");
+        return false;
+    }
+
+    if (["Delivered", "Cancelled"].indexOf(oSavedOrder.Status) >= 0) {
+        MessageToast.show("This order can no longer be modified.");
+        return false;
+    }
+
+    fnUpdate(oSavedOrder);
+
+    try {
+        localStorage.setItem(
+            "biteDashOrders",
+            JSON.stringify(aOrders)
+        );
+    } catch (e) {
+        MessageBox.error("Could not save order changes.");
+        return false;
+    }
+
+    this._loadOrders();
+
+    oSelectedModel.setData(
+        Object.assign({}, oSavedOrder)
+    );
+
+    return true;
+},
+onConfirmOrderDelay: function () {
+    var oView = this.getView();
+
+    var sReason = this.byId("delayReasonSelect")
+        .getSelectedKey();
+
+    var iMinutes = Number(
+        this.byId("delayMinutesSelect").getSelectedKey()
+    );
+
+    if (!sReason || !iMinutes || iMinutes <= 0) {
+        MessageToast.show("Please select a valid delay.");
+        return;
+    }
+
+    var bSaved = this._updateSelectedOrder(function (oOrder) {
+        oOrder.IsDelayed = true;
+        oOrder.DelayMinutes = iMinutes;
+        oOrder.DelayReason = sReason;
+        oOrder.DelayUpdatedAt = new Date().toISOString();
+    });
+
+    if (!bSaved) {
+        return;
+    }
+
+    this.byId("delayOrderDialog").close();
+
+    MessageToast.show(
+        "Order delayed by " + iMinutes + " minutes."
+    );
+},
+onConfirmOrderFlag: function () {
+    var sReason = this.byId("flagReasonSelect")
+        .getSelectedKey();
+
+    var sDescription = this.byId("flagDescriptionInput")
+        .getValue().trim();
+
+    if (!sReason) {
+        MessageToast.show("Please select an issue reason.");
+        return;
+    }
+
+    var bSaved = this._updateSelectedOrder(function (oOrder) {
+        oOrder.IsFlagged = true;
+        oOrder.FlagReason = sReason;
+        oOrder.FlagDescription = sDescription;
+        oOrder.FlaggedAt = new Date().toISOString();
+    });
+
+    if (!bSaved) {
+        return;
+    }
+
+    this.byId("flagOrderDialog").close();
+
+    MessageToast.show("Order flagged successfully.");
+},
+onResolveOrderFlag: function () {
     var that = this;
 
-    sap.m.MessageBox.confirm(
-        "Are you sure you want to delete Order #" +
-            oSelectedOrder.OrderID + "?",
+    MessageBox.confirm(
+        "Are you sure you want to resolve this order flag?",
         {
-            title: "Delete Order",
-            actions: [
-                sap.m.MessageBox.Action.DELETE,
-                sap.m.MessageBox.Action.CANCEL
-            ],
-            emphasizedAction: sap.m.MessageBox.Action.DELETE,
+            title: "Resolve Order Flag",
 
             onClose: function (sAction) {
-                if (sAction !== sap.m.MessageBox.Action.DELETE) {
+                if (sAction !== MessageBox.Action.OK) {
                     return;
                 }
 
-                var aOrders =
-                    oOrderDataModel.getProperty("/items") || [];
-
-                var iIndex = aOrders.findIndex(function (oOrder) {
-                    return String(oOrder.OrderID) ===
-                        String(oSelectedOrder.OrderID);
-                });
-
-                if (iIndex === -1) {
-                    sap.m.MessageToast.show("Order not found.");
-                    return;
-                }
-
-                // Remove only the selected order
-                aOrders.splice(iIndex, 1);
-
-                oOrderDataModel.setProperty("/items", aOrders);
-
-                // Save the updated orders
-                localStorage.setItem(
-                    "biteDashOrders",
-                    JSON.stringify(aOrders)
+                var bSaved = that._updateSelectedOrder(
+                    function (oOrder) {
+                        oOrder.IsFlagged = false;
+                        oOrder.FlagReason = "";
+                        oOrder.FlagDescription = "";
+                        oOrder.FlagResolvedAt =
+                            new Date().toISOString();
+                    }
                 );
 
-                // Clear the selection after deletion
-                oSelectedOrderModel.setData({});
-
-                // Clear selection in the left-side list
-                var oList = that.byId("businessOrdersList");
-                if (oList) {
-                    oList.removeSelections(true);
+                if (bSaved) {
+                    MessageToast.show("Order flag resolved.");
                 }
-
-                sap.m.MessageToast.show("Order deleted successfully.");
             }
         }
     );
 },
 
 
+onCheckoutNameChange: function (oEvent) {
+    var oInput = oEvent.getSource();
+    var sValue = oInput.getValue();
+
+    sValue = sValue.replace(/[^a-zA-Z ]/g, "");
+
+    oInput.setValue(sValue);
+},
+onCheckoutPhoneChange: function (oEvent) {
+    var oInput = oEvent.getSource();
+    var sValue = oInput.getValue();
+
+    sValue = sValue.replace(/[^0-9]/g, "");
+
+    oInput.setValue(sValue);
+},
+
+onCheckoutAddressChange: function (oEvent) {
+    var oInput = oEvent.getSource();
+    var sValue = oInput.getValue();
+
+    sValue = sValue.replace(/[^a-zA-Z0-9\s,./#-]/g, "");
+
+    oInput.setValue(sValue);
+},
+_validateCheckoutDetails: function () {
+
+    var oModel = this.getView().getModel("checkout");
+    var oData = oModel.getData();
+
+    var sName = (oData.CustomerName || "").trim();
+    var sPhone = (oData.Phone || "").trim();
+    var sAddress = (oData.Address || "").trim();
+
+    if (!/^[a-zA-Z]+(?: [a-zA-Z]+)*$/.test(sName)) {
+        sap.m.MessageBox.error("Please enter a valid full name.");
+        return false;
+    }
+
+    if (!/^[6-9][0-9]{9}$/.test(sPhone)) {
+        sap.m.MessageBox.error(
+            "Please enter a valid 10-digit Indian mobile number."
+        );
+        return false;
+    }
+
+    if (
+        sAddress.length < 10 ||
+        !/[a-zA-Z]/.test(sAddress) ||
+        !/[0-9]/.test(sAddress)
+    ) {
+        sap.m.MessageBox.error(
+            "Please enter a complete delivery address."
+        );
+        return false;
+    }
+
+    return true;
+},
 
 
+onCheckoutAddressFieldChange: function (oEvent) {
+    var oInput = oEvent.getSource();
+    var sValue = oInput.getValue();
+
+    sValue = sValue.replace(/[^a-zA-Z0-9\s,./#-]/g, "");
+
+    oInput.setValue(sValue);
+},
+onCheckoutCityChange: function (oEvent) {
+    var oInput = oEvent.getSource();
+    var sValue = oInput.getValue();
+
+    sValue = sValue.replace(/[^a-zA-Z ]/g, "");
+
+    oInput.setValue(sValue);
+},
+onCheckoutStateChange: function (oEvent) {
+    var oInput = oEvent.getSource();
+    var sValue = oInput.getValue();
+
+    sValue = sValue.replace(/[^a-zA-Z ]/g, "");
+
+    oInput.setValue(sValue);
+},
+onCheckoutPincodeChange: function (oEvent) {
+    var oInput = oEvent.getSource();
+    var sValue = oInput.getValue();
+
+    sValue = sValue.replace(/[^0-9]/g, "");
+
+    oInput.setValue(sValue);
+},
+
+_validateDeliveryAddress: function () {
+
+    var oModel = this.getView().getModel("checkout");
+    var oData = oModel.getData();
+
+    var sName = (oData.CustomerName || "").trim();
+    var sPhone = (oData.Phone || "").trim();
+
+    var sHouseNo = (oData.HouseNo || "").trim();
+    var sStreet = (oData.Street || "").trim();
+    var sLandmark = (oData.Landmark || "").trim();
+    var sCity = (oData.City || "").trim();
+    var sState = (oData.State || "").trim();
+    var sPincode = (oData.Pincode || "").trim();
+
+    // 1. Full Name
+    if (!/^[a-zA-Z]+(?: [a-zA-Z]+)*$/.test(sName)) {
+        sap.m.MessageBox.error(
+            "Please enter a valid full name using alphabets only."
+        );
+        return false;
+    }
+
+    // 2. Mobile Number
+    if (!/^[6-9][0-9]{9}$/.test(sPhone)) {
+        sap.m.MessageBox.error(
+            "Please enter a valid 10-digit Indian mobile number."
+        );
+        return false;
+    }
+
+    // 3. House / Flat Number
+    if (
+        !sHouseNo ||
+        !/[a-zA-Z0-9]/.test(sHouseNo) ||
+        !/^[a-zA-Z0-9\s,./#-]+$/.test(sHouseNo)
+    ) {
+        sap.m.MessageBox.error(
+            "Please enter a valid House / Flat Number."
+        );
+        return false;
+    }
+
+    // 4. Street / Area
+    if (
+        !sStreet ||
+        !/[a-zA-Z0-9]/.test(sStreet) ||
+        !/^[a-zA-Z0-9\s,./#-]+$/.test(sStreet)
+    ) {
+        sap.m.MessageBox.error(
+            "Please enter a valid Street / Area."
+        );
+        return false;
+    }
+
+    // 5. Landmark (Optional)
+    if (
+        sLandmark &&
+        !/^[a-zA-Z0-9\s,./#-]+$/.test(sLandmark)
+    ) {
+        sap.m.MessageBox.error(
+            "Please enter a valid Landmark."
+        );
+        return false;
+    }
+
+    // 6. City
+    if (!/^[a-zA-Z]+(?: [a-zA-Z]+)*$/.test(sCity)) {
+        sap.m.MessageBox.error(
+            "Please enter a valid City using alphabets only."
+        );
+        return false;
+    }
+
+    // 7. State
+    if (!/^[a-zA-Z]+(?: [a-zA-Z]+)*$/.test(sState)) {
+        sap.m.MessageBox.error(
+            "Please enter a valid State using alphabets only."
+        );
+        return false;
+    }
+
+    // 8. PIN Code
+    if (!/^[1-9][0-9]{5}$/.test(sPincode)) {
+        sap.m.MessageBox.error(
+            "Please enter a valid 6-digit Indian PIN Code."
+        );
+        return false;
+    }
+
+    return true;
+}
 
 
 
