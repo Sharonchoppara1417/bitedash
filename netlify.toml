@@ -1,0 +1,11 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/V3/*"
+  to = "https://services.odata.org/V3/:splat"
+  status = 200
+  force = true
+
+

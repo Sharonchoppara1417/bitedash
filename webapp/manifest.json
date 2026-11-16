@@ -29,7 +29,7 @@
     "dataSources": {
       "mainService": {
        
-        "uri": "/V3/(S(qqx5dnvshxy4chcx4tfrxquo))/OData/OData.svc/",
+        "uri": "/V3/OData/OData.svc/",
        
         "type": "OData",
         "settings": {
