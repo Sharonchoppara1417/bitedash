@@ -1098,12 +1098,17 @@
         class="sapUiSmallMargin"
         renderType="Bare">
 
-        <HBox justifyContent="Start" class="sapUiSmallMarginBottom">
+        <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap" class="sapUiSmallMarginBottom">
             <Button
                 text="Back to Home"
                 icon="sap-icon://nav-back"
                 type="Transparent"
                 press=".onCustomerHome"/>
+            <Button
+                text="Track My Returns"
+                icon="sap-icon://undo"
+                type="Emphasized"
+                press=".onOpenCustomerReturns"/>
         </HBox>
 
         <!-- Two columns on wide screens, stacked on phones -->
@@ -1568,7 +1573,116 @@
         </Panel>
     </VBox>
 
-   
+    <!-- ===================== CUSTOMER RETURN TRACKING ===================== -->
+    <VBox
+        id="customerReturnsSection"
+        visible="{= ${app>/role} === 'customer' &amp;&amp; ${app>/section} === 'customerReturns' }"
+        width="100%"
+        class="biteDashSection sapUiSmallMargin"
+        renderType="Bare">
+
+        <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap" class="sapUiSmallMarginBottom">
+            <Button
+                text="Back to My Orders"
+                icon="sap-icon://nav-back"
+                type="Transparent"
+                press=".onCancelReturnRequest"/>
+            <Title text="My Return Tracking" level="H1" titleStyle="H2"/>
+        </HBox>
+
+        <Text
+            text="Follow every step of your return, from approval and pickup to refund completion."
+            class="sapUiSmallMarginBottom"/>
+
+        <List
+            id="customerReturnsList"
+            items="{returnData>/items}"
+            noDataText="You have not requested any returns yet."
+            showSeparators="Inner">
+
+            <CustomListItem>
+                <VBox width="100%" class="sapUiSmallMargin" renderType="Bare">
+                    <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap">
+                        <Title
+                            text="{= 'Return for Order #' + ${returnData>OrderID} }"
+                            level="H4"/>
+                        <ObjectStatus
+                            text="{returnData>ReturnStatus}"
+                            inverted="true"
+                            state="{= ${returnData>ReturnStatus} === 'Rejected' ? 'Error'
+                                : ${returnData>ReturnStatus} === 'Refunded' ? 'Success'
+                                : 'Information' }"/>
+                    </HBox>
+
+                    <Text text="{returnData>ItemSummary}" wrapping="true" class="sapUiTinyMarginTop"/>
+                    <Text
+                        text="{= 'Reason: ' + (${returnData>ReturnReason} || 'Not specified') }"
+                        class="sapUiTinyMarginTop"/>
+                    <ObjectNumber
+                        number="{= 'Refund amount: ₹ ' + (Number(${returnData>RefundAmount}) || 0).toFixed(2) }"
+                        emphasized="true"
+                        class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+
+                    <MessageStrip
+                        text="This return request was rejected. Please contact the restaurant for more information."
+                        type="Error"
+                        showIcon="true"
+                        showCloseButton="false"
+                        visible="{= ${returnData>ReturnStatus} === 'Rejected' }"/>
+
+                    <VBox visible="{= ${returnData>ReturnStatus} !== 'Rejected' }">
+                        <ProgressIndicator
+                            percentValue="{= ${returnData>ReturnStatus} === 'Requested' ? 20
+                                : ${returnData>ReturnStatus} === 'Approved' ? 40
+                                : ${returnData>ReturnStatus} === 'Pickup Scheduled' ? 60
+                                : ${returnData>ReturnStatus} === 'Picked Up' ? 80
+                                : ${returnData>ReturnStatus} === 'Refunded' ? 100 : 0 }"
+                            displayValue="{= ${returnData>ReturnStatus} === 'Refunded' ? 'Refund completed'
+                                : ${returnData>ReturnStatus} === 'Picked Up' ? 'Item picked up'
+                                : ${returnData>ReturnStatus} === 'Pickup Scheduled' ? 'Pickup scheduled'
+                                : ${returnData>ReturnStatus} === 'Approved' ? 'Return approved'
+                                : 'Return requested' }"
+                            state="{= ${returnData>ReturnStatus} === 'Refunded' ? 'Success' : 'Information' }"
+                            class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+
+                        <HBox wrap="Wrap" justifyContent="SpaceBetween">
+                            <VBox class="sapUiTinyMarginEnd sapUiSmallMarginBottom">
+                                <ObjectStatus text="1. Requested" state="Success"/>
+                                <Text text="{returnData>ReturnRequestDate}" wrapping="true"/>
+                            </VBox>
+                            <VBox class="sapUiTinyMarginEnd sapUiSmallMarginBottom">
+                                <ObjectStatus
+                                    text="2. Approved"
+                                    state="{= ['Approved', 'Pickup Scheduled', 'Picked Up', 'Refunded'].indexOf(${returnData>ReturnStatus}) >= 0 ? 'Success' : 'None' }"/>
+                                <Text text="{returnData>ReturnApprovedAt}" wrapping="true"/>
+                            </VBox>
+                            <VBox class="sapUiTinyMarginEnd sapUiSmallMarginBottom">
+                                <ObjectStatus
+                                    text="3. Pickup scheduled"
+                                    state="{= ['Pickup Scheduled', 'Picked Up', 'Refunded'].indexOf(${returnData>ReturnStatus}) >= 0 ? 'Success' : 'None' }"/>
+                                <Text text="{returnData>ReturnPickupScheduledAt}" wrapping="true"/>
+                            </VBox>
+                            <VBox class="sapUiTinyMarginEnd sapUiSmallMarginBottom">
+                                <ObjectStatus
+                                    text="4. Picked up"
+                                    state="{= ['Picked Up', 'Refunded'].indexOf(${returnData>ReturnStatus}) >= 0 ? 'Success' : 'None' }"/>
+                                <Text text="{returnData>ReturnPickedUpAt}" wrapping="true"/>
+                            </VBox>
+                            <VBox class="sapUiSmallMarginBottom">
+                                <ObjectStatus
+                                    text="5. Refunded"
+                                    state="{= ${returnData>ReturnStatus} === 'Refunded' ? 'Success' : 'None' }"/>
+                                <Text text="{returnData>RefundCompletedAt}" wrapping="true"/>
+                                <Text
+                                    text="{= 'Refund status: ' + (${returnData>RefundStatus} || 'Pending') }"
+                                    class="sapUiTinyMarginTop"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </VBox>
+            </CustomListItem>
+        </List>
+    </VBox>
 
     <!-- ============ RESTAURANT LAYOUT: SIDEBAR + CONTENT ============ -->
     <FlexBox
