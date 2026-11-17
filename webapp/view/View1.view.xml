@@ -550,6 +550,9 @@
                 <Column importance="High" width="7rem" hAlign="End">
                     <Text text="Price"/>
                 </Column>
+                <Column width="8rem" hAlign="Center">
+                    <Text text="Status"/>
+                </Column>
               
             </columns>
 
@@ -570,8 +573,13 @@
                             iconSize="0.875rem"
                             editable="false"/>
 
-                        <Text
-                            text="{= '₹ ' + (Number(${products>Price}) || 0).toFixed(2) }"/>
+                       
+                            <Text
+                                    text="{= '₹ ' + (Number(${products>Price}) || 0).toFixed(2) }"/>
+
+                                <ObjectStatus
+                                    text="{= ${products>Available} !== false ? 'Available' : 'Unavailable' }"
+                                    state="{= ${products>Available} !== false ? 'Success' : 'Error' }"/>
                        
                     </cells>
                 </ColumnListItem>
