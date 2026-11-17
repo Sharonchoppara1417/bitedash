@@ -525,10 +525,8 @@
             items="{products>/items}"
             mode="MultiSelect"
             selectionChange=".onMenuProductSelect"
-            growing="true"
-            growingThreshold="8"
-            noDataText="No products found."
-           growingScrollToLoad="false" >
+            growing="false"
+            noDataText="No products found." >
 
             <columns>
                 <Column importance="Low" width="4rem">
