@@ -153,6 +153,21 @@ onInit: function () {
     }.bind(this);
     window.addEventListener("storage", this._fnMenuStorageSync);
 
+    // Broadcast order changes directly to other BiteDash tabs on this origin.
+    // The storage event remains as a fallback for browsers without BroadcastChannel.
+    if (typeof window.BroadcastChannel === "function") {
+        this._oOrdersChannel = new window.BroadcastChannel("bitedash-orders-sync");
+        this._oOrdersChannel.onmessage = function (oMessageEvent) {
+            if (
+                oMessageEvent.data &&
+                oMessageEvent.data.type === "ORDER_UPDATED"
+            ) {
+                this._loadOrders();
+                this._loadReturns();
+            }
+        }.bind(this);
+    }
+
     // Keep order data synchronized even if the login model is temporarily
     // out of sync. _prepareOrderedProducts applies the correct role/user filter.
     // This is important when the customer is already viewing the tracking page.
@@ -214,6 +229,10 @@ onInit: function () {
         document.removeEventListener("mousedown", this._fnFocusPointer, true);
         document.removeEventListener("touchstart", this._fnFocusPointer, true);
         window.removeEventListener("storage", this._fnMenuStorageSync);
+        if (this._oOrdersChannel) {
+            this._oOrdersChannel.close();
+            this._oOrdersChannel = null;
+        }
         document.removeEventListener("visibilitychange", this._fnOrdersVisibilitySync);
         if (this._iOrdersSyncTimer) {
             window.clearInterval(this._iOrdersSyncTimer);
@@ -617,7 +636,18 @@ var aAlerts = [
         console.log("BiteDash menu synchronized from another browser tab.");
     },
 
-    _loadOrders: function () {
+    _broadcastOrderUpdate: function (oOrder) {
+    // Notify other open tabs immediately after the order is saved.
+    if (this._oOrdersChannel && oOrder && oOrder.OrderID != null) {
+        this._oOrdersChannel.postMessage({
+            type: "ORDER_UPDATED",
+            orderId: String(oOrder.OrderID),
+            status: oOrder.Status
+        });
+    }
+},
+
+_loadOrders: function () {
     var aOrders = [];
     var sOrdersSnapshot = localStorage.getItem("biteDashOrders") || "[]";
     this._sLastOrdersSnapshot = sOrdersSnapshot;
@@ -2211,6 +2241,7 @@ _updateCartTotals: function (aItems) {
             }
 
             this._loadOrders();
+            this._broadcastOrderUpdate(oSavedOrder);
 
             MessageToast.show(
                 "Order status updated to " + oSavedOrder.Status
@@ -2293,6 +2324,7 @@ _updateCartTotals: function (aItems) {
 
     // Refresh the order list and dashboard counts
     this._loadOrders();
+    this._broadcastOrderUpdate(oSavedOrder);
 
     // Keep the currently selected order visible on the right
     var oUpdatedOrder = Object.assign({}, oSavedOrder);
