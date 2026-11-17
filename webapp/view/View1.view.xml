@@ -682,6 +682,11 @@
                                     <layoutData>
                                         <FlexItemData growFactor="1" minWidth="10rem"/>
                                     </layoutData>
+                                    <CheckBox
+                                        text="Include in this order"
+                                        selected="{cart>Selected}"
+                                        select=".onCartItemSelectionChange"
+                                        class="sapUiTinyMarginBottom"/>
                                     <Title
                                         text="{cart>Name}"
                                         level="H5"
@@ -747,16 +752,21 @@
                         class="checkoutCard sapUiSmallMarginBottom">
 
                         <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
-                            <Text text="Total items"/>
+                            <Text text="Selected for this order"/>
                             <ObjectStatus
-                                text="{cart>/count}"
+                                text="{cart>/selectedCount}"
                                 state="Information"/>
                         </HBox>
 
                         <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
-                            <Text text="Items subtotal"/>
-                            <Text text="{= '₹' + (Number(${cart>/total}) || 0).toFixed(2) }"/>
+                            <Text text="Selected items subtotal"/>
+                            <Text text="{= '₹' + (Number(${cart>/selectedTotal}) || 0).toFixed(2) }"/>
                         </HBox>
+
+                        <Text
+                            text="Unselected products will stay in your cart for your next order."
+                            wrapping="true"
+                            class="sapUiTinyMarginBottom"/>
 
                         <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
                             <Text text="Delivery fee"/>
@@ -778,7 +788,7 @@
                             <Title
                                 class="cartTotalValue"
                                 level="H4"
-                                text="{= '₹' + (Number(${cart>/total}) || 0).toFixed(2) }"/>
+                                text="{= '₹' + (Number(${cart>/selectedTotal}) || 0).toFixed(2) }"/>
                         </HBox>
 
                         <Button
@@ -994,13 +1004,13 @@
                         </layoutData>
 
                         <Text
-                            visible="{= ${cart>/items}.length === 0 }"
-                            text="Your cart is empty"
+                            visible="{= ${cart>/checkoutItems}.length === 0 }"
+                            text="No products selected for this order"
                             class="sapUiSmallMarginBottom"/>
 
                         <VBox
                             id="checkoutItemsList"
-                            items="{cart>/items}"
+                            items="{cart>/checkoutItems}"
                             renderType="Bare">
 
                             <HBox
@@ -1025,7 +1035,7 @@
 
                         <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
                             <Text text="Items Total"/>
-                            <Text text="{= '₹' + (Number(${cart>/total}) || 0).toFixed(2) }"/>
+                            <Text text="{= '₹' + (Number(${cart>/checkoutTotal}) || 0).toFixed(2) }"/>
                         </HBox>
 
                         <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
@@ -1056,7 +1066,7 @@
                             icon="sap-icon://accept"
                             type="Emphasized"
                             width="100%"
-                            enabled="{= ${cart>/items}.length > 0 }"
+                            enabled="{= ${cart>/checkoutItems}.length > 0 }"
                             press=".onPlaceOrder"
                             class="checkoutPrimaryBtn"/>
 
