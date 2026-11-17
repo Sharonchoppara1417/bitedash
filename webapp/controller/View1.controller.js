@@ -366,6 +366,25 @@ var aAlerts = [
     // Combine OData products with locally saved menu items
     function loadLocalItems(aODataProducts) {
         var aSavedItems = getLocalItems();
+        var aOverrides = [];
+
+        // Apply locally persisted edits to OData products so both menu
+        // screens always receive the same latest product details.
+        try {
+            var vOverrides = JSON.parse(
+                localStorage.getItem("biteDashMenuOverrides") || "[]"
+            );
+            aOverrides = Array.isArray(vOverrides) ? vOverrides : [];
+        } catch (e) {
+            console.error("Could not read saved menu overrides:", e);
+        }
+
+        aODataProducts = aODataProducts.map(function (oProduct) {
+            var oOverride = aOverrides.find(function (oItem) {
+                return String(oItem.ID) === String(oProduct.ID);
+            });
+            return oOverride ? Object.assign({}, oProduct, oOverride) : oProduct;
+        });
 
         aSavedItems.forEach(function (oItem) {
             oItem.CategoryNames =
@@ -2465,7 +2484,6 @@ _updateCartTotals: function (aItems) {
                 aSavedItems = JSON.parse(
                     localStorage.getItem("biteDashCustomMenu") || "[]"
                 );
-                that._loadProducts();
 
                 if (!Array.isArray(aSavedItems)) {
                     aSavedItems = [];
@@ -2712,23 +2730,53 @@ onToggleAvailable: function (oEvent) {
                         }
                     );
 
+                    if (!Array.isArray(aSavedItems)) {
+                        aSavedItems = [];
+                    }
+
                     if (iSavedIndex !== -1) {
                         aSavedItems[iSavedIndex] = oUpdatedProduct;
-
                         localStorage.setItem(
                             "biteDashCustomMenu",
                             JSON.stringify(aSavedItems)
                         );
+                    } else {
+                        // OData products are read-only in this demo service.
+                        // Keep their edits locally and merge them on every reload.
+                        var aOverrides = JSON.parse(
+                            localStorage.getItem("biteDashMenuOverrides") || "[]"
+                        );
+                        if (!Array.isArray(aOverrides)) {
+                            aOverrides = [];
+                        }
+
+                        var iOverrideIndex = aOverrides.findIndex(
+                            function (oItem) {
+                                return String(oItem.ID) === String(oUpdatedProduct.ID);
+                            }
+                        );
+
+                        if (iOverrideIndex === -1) {
+                            aOverrides.push(oUpdatedProduct);
+                        } else {
+                            aOverrides[iOverrideIndex] = oUpdatedProduct;
+                        }
+
+                        localStorage.setItem(
+                            "biteDashMenuOverrides",
+                            JSON.stringify(aOverrides)
+                        );
                     }
                 } catch (e) {
                     MessageBox.error(
-                        "Could not save the menu changes."
+                        "Could not save the menu changes. Check browser storage and try again."
                     );
                     return;
                 }
-                oProductsModel.refresh(true);
 
-                that._loadProducts();
+                oProductsModel.setProperty("/items", aProducts);
+                oProductsModel.refresh(true);
+                that._refreshBusinessHome();
 
                 oDialog.close();
 
