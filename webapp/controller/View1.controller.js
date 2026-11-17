@@ -153,15 +153,13 @@ onInit: function () {
     }.bind(this);
     window.addEventListener("storage", this._fnMenuStorageSync);
 
-    // Keep customer tracking live even when the browser does not deliver a
-    // storage event (for example, when the app is open in another tab/window).
-    // Only reload when the saved order data actually changes.
+    // Keep order data synchronized even if the login model is temporarily
+    // out of sync. _prepareOrderedProducts applies the correct role/user filter.
+    // This is important when the customer is already viewing the tracking page.
     this._sLastOrdersSnapshot = localStorage.getItem("biteDashOrders") || "[]";
-    this._iOrdersSyncTimer = window.setInterval(function () {
-        var oApp = this.getView() && this.getView().getModel("app");
-        if (!oApp ||
-            !oApp.getProperty("/isLoggedIn") ||
-            oApp.getProperty("/role") !== "customer") {
+
+    this._fnOrdersVisibilitySync = function () {
+        if (document.visibilityState !== "visible") {
             return;
         }
 
@@ -170,7 +168,16 @@ onInit: function () {
             this._loadOrders();
             this._loadReturns();
         }
-    }.bind(this), 1500);
+    }.bind(this);
+    document.addEventListener("visibilitychange", this._fnOrdersVisibilitySync);
+
+    this._iOrdersSyncTimer = window.setInterval(function () {
+        var sLatestSnapshot = localStorage.getItem("biteDashOrders") || "[]";
+        if (sLatestSnapshot !== this._sLastOrdersSnapshot) {
+            this._loadOrders();
+            this._loadReturns();
+        }
+    }.bind(this), 1000);
 
     // 16. Show the focus box on tab buttons only for Tab/arrow-key navigation
     this._initFocusMode();
@@ -207,6 +214,7 @@ onInit: function () {
         document.removeEventListener("mousedown", this._fnFocusPointer, true);
         document.removeEventListener("touchstart", this._fnFocusPointer, true);
         window.removeEventListener("storage", this._fnMenuStorageSync);
+        document.removeEventListener("visibilitychange", this._fnOrdersVisibilitySync);
         if (this._iOrdersSyncTimer) {
             window.clearInterval(this._iOrdersSyncTimer);
             this._iOrdersSyncTimer = null;
