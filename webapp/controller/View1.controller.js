@@ -134,7 +134,19 @@ onInit: function () {
     this._loadOrders();
     this._loadProducts();
     this._loadReturns();
-    // 15. Show the focus box on tab buttons only for Tab/arrow-key navigation
+    // 15. Keep menu changes synchronized with other BiteDash tabs.
+    // The browser fires "storage" in OTHER tabs when menu localStorage changes.
+    this._fnMenuStorageSync = function (oEvent) {
+        if (
+            oEvent.key === "biteDashCustomMenu" ||
+            oEvent.key === "biteDashMenuOverrides"
+        ) {
+            this._syncMenuAcrossTabs();
+        }
+    }.bind(this);
+    window.addEventListener("storage", this._fnMenuStorageSync);
+
+    // 16. Show the focus box on tab buttons only for Tab/arrow-key navigation
     this._initFocusMode();
 },
     _initFocusMode: function () {
@@ -168,6 +180,7 @@ onInit: function () {
         document.removeEventListener("keydown", this._fnFocusKeyDown, true);
         document.removeEventListener("mousedown", this._fnFocusPointer, true);
         document.removeEventListener("touchstart", this._fnFocusPointer, true);
+        window.removeEventListener("storage", this._fnMenuStorageSync);
         document.documentElement.classList.remove("bdTabbing");
     },
 
@@ -501,6 +514,71 @@ var aAlerts = [
         }
     });
 },
+    // Update an already-open customer/restaurant tab when another tab changes the menu.
+    // This avoids forcing customers to refresh or log in again.
+    _syncMenuAcrossTabs: function () {
+        var oView = this.getView();
+        var oProductsModel = oView.getModel("products");
+
+        if (!oProductsModel) {
+            return;
+        }
+
+        function readMenuArray(sKey) {
+            try {
+                var aData = JSON.parse(localStorage.getItem(sKey) || "[]");
+                return Array.isArray(aData) ? aData : [];
+            } catch (e) {
+                console.error("Could not synchronize " + sKey + ":", e);
+                return [];
+            }
+        }
+
+        var aCustomItems = readMenuArray("biteDashCustomMenu");
+        var aOverrides = readMenuArray("biteDashMenuOverrides");
+        var aItems = (oProductsModel.getProperty("/items") || []).map(function (oItem) {
+            var oCustom = aCustomItems.find(function (oSaved) {
+                return String(oSaved.ID) === String(oItem.ID);
+            });
+            var oOverride = aOverrides.find(function (oSaved) {
+                return String(oSaved.ID) === String(oItem.ID);
+            });
+
+            return Object.assign(
+                {},
+                oItem,
+                oCustom || {},
+                oOverride || {}
+            );
+        });
+
+        // Include newly added restaurant items in the already-open customer tab.
+        aCustomItems.forEach(function (oCustom) {
+            var bExists = aItems.some(function (oItem) {
+                return String(oItem.ID) === String(oCustom.ID);
+            });
+
+            if (!bExists) {
+                aItems.push(Object.assign({
+                    Available: true,
+                    Category: "Food",
+                    CategoryNames: "Food"
+                }, oCustom));
+            }
+        });
+
+        oProductsModel.setProperty("/items", aItems);
+        oProductsModel.refresh(true);
+
+        var oSearch = oView.byId("foodSearchField");
+        if (oView.byId("foodMenuList")) {
+            this._applyFoodFilters(oSearch ? oSearch.getValue() : "");
+        }
+
+        this._refreshBusinessHome();
+        console.log("BiteDash menu synchronized from another browser tab.");
+    },
+
     _loadOrders: function () {
     var aOrders = [];
 
