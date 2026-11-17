@@ -1058,7 +1058,7 @@
                             <Title
                                 class="checkoutTotal"
                                 level="H4"
-                                text="{= '₹' + (Number(${cart>/total}) || 0).toFixed(2) }"/>
+                                text="{= '₹' + (Number(${cart>/checkoutTotal}) || 0).toFixed(2) }"/>
                         </HBox>
 
                         <Button
