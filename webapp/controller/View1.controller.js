@@ -1496,17 +1496,27 @@ _updateCartTotals: function (aItems) {
     var oCart = oView.getModel("cart");
     var oApp = oView.getModel("app");
 
-    var oDetails = oCheckout.getData();
-    var aItems = oCart.getProperty("/items") || [];
+    // Prevent a rapid double click from creating duplicate orders.
+    if (this._bOrderSubmissionInProgress) {
+        MessageToast.show("Your order is already being processed.");
+        return;
+    }
 
-    if (!aItems.length) {
+    if (!oCheckout || !oCart || !oApp) {
+        MessageBox.error("Checkout information is unavailable. Please try again.");
+        return;
+    }
+
+    var oDetails = oCheckout.getData() || {};
+    var aCartItems = oCart.getProperty("/items") || [];
+
+    if (!aCartItems.length) {
         MessageToast.show("Your cart is empty.");
         oApp.setProperty("/section", "customerMenu");
         return;
     }
 
-    if (!oDetails.CustomerName ||
-        !oDetails.CustomerName.trim()) {
+    if (!oDetails.CustomerName || !oDetails.CustomerName.trim()) {
         MessageToast.show("Please enter your name.");
         return;
     }
@@ -1541,6 +1551,28 @@ _updateCartTotals: function (aItems) {
         return;
     }
 
+    // Snapshot every cart line so all selected products go into ONE order.
+    var aOrderItems = aCartItems.map(function (oItem) {
+        return {
+            ID: oItem.ID,
+            Name: oItem.Name,
+            Description: oItem.Description || "",
+            Rating: Number(oItem.Rating) || 0,
+            Price: Number(oItem.Price) || 0,
+            Quantity: Math.max(1, Number(oItem.Quantity) || 1)
+        };
+    });
+
+    var iTotalQuantity = aOrderItems.reduce(function (iTotal, oItem) {
+        return iTotal + oItem.Quantity;
+    }, 0);
+
+    var fTotal = aOrderItems.reduce(function (fSum, oItem) {
+        return fSum + (oItem.Price * oItem.Quantity);
+    }, 0);
+
+    this._bOrderSubmissionInProgress = true;
+
     var aOrders = [];
 
     try {
@@ -1552,11 +1584,10 @@ _updateCartTotals: function (aItems) {
             aOrders = [];
         }
     } catch (e) {
+        this._bOrderSubmissionInProgress = false;
         MessageBox.error("Unable to read saved orders.");
         return;
     }
-
-    var fTotal = Number(oCart.getProperty("/total")) || 0;
 
     var iNextId = aOrders.reduce(function (iMax, oOrder) {
         return Math.max(iMax, Number(oOrder.OrderID) || 0);
@@ -1568,11 +1599,11 @@ _updateCartTotals: function (aItems) {
         "Card (demo)"
     ];
 
+    // Exactly ONE order record, containing ALL products from the cart.
     var oOrder = {
         OrderID: iNextId,
         CustomerName: oDetails.CustomerName.trim(),
         Phone: oDetails.Phone,
-
         Address:
             oDetails.HouseNo + ", " +
             oDetails.Street + ", " +
@@ -1580,27 +1611,16 @@ _updateCartTotals: function (aItems) {
             oDetails.City + ", " +
             oDetails.State + " - " +
             oDetails.Pincode,
-
         PaymentMethod:
-            aPaymentMethods[oDetails.PaymentIndex] ||
-            "Cash on Delivery",
-
-        Items: aItems.map(function (oItem) {
-            return {
-                ID: oItem.ID,
-                Name: oItem.Name,
-                Description: oItem.Description || "",
-                Rating: Number(oItem.Rating) || 0,
-                Price: Number(oItem.Price) || 0,
-                Quantity: Number(oItem.Quantity) || 1
-            };
-        }),
-
-        Total: fTotal,
+            aPaymentMethods[oDetails.PaymentIndex] || "Cash on Delivery",
+        Items: aOrderItems,
+        ItemCount: iTotalQuantity,
+        Total: Number(fTotal.toFixed(2)),
         OrderDate: new Date().toISOString(),
         Status: "Placed"
     };
 
+    // Append once and save the single combined order.
     aOrders.push(oOrder);
 
     try {
@@ -1609,12 +1629,14 @@ _updateCartTotals: function (aItems) {
             JSON.stringify(aOrders)
         );
     } catch (e) {
+        this._bOrderSubmissionInProgress = false;
         MessageBox.error(
             "The order could not be saved in browser storage."
         );
         return;
     }
 
+    // Refresh customer and restaurant order views from the same saved order.
     this._loadOrders();
 
     oCart.setData({
@@ -1637,8 +1659,11 @@ _updateCartTotals: function (aItems) {
         PaymentIndex: 0
     });
 
+    this._bOrderSubmissionInProgress = false;
+
     MessageBox.success(
-        "Your order has been placed successfully! Order ID: " +
+        "Your order containing " + iTotalQuantity +
+        " item(s) has been placed successfully! Order ID: " +
         oOrder.OrderID,
         {
             title: "Order Confirmed",
