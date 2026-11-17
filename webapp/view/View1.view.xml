@@ -594,158 +594,217 @@
         class="sapUiSmallMargin"
         renderType="Bare">
 
-        <FlexBox width="100%" justifyContent="Center" renderType="Bare">
-            <VBox renderType="Bare">
-                <layoutData>
-                    <FlexItemData growFactor="1" baseSize="40rem" maxWidth="40rem" minWidth="0"/>
-                </layoutData>
+        <VBox width="100%" renderType="Bare">
+            <layoutData>
+                <FlexItemData growFactor="1" baseSize="76rem" maxWidth="76rem" minWidth="0"/>
+            </layoutData>
 
-        
-
-                <!-- EMPTY CART -->
-                <VBox
-                    visible="{= ${cart>/items}.length === 0 }"
-                    alignItems="Center"
-                    justifyContent="Center"
-                    class="sapUiLargeMarginTop sapUiLargeMarginBottom"
-                    renderType="Bare" >
-                           <!-- HEADER -->
-                <Title text="Your Cart" level="H1" titleStyle="H2"/>
-                <Text
-                    text="{= 'Total items: ' + (Number(${cart>/count}) || 0) }"
-                    class="sapUiTinyMarginTop sapUiSmallMarginBottom"/>
-                    <core:Icon
-                        src="sap-icon://cart"
-                        size="3rem"
-                        color="Neutral"
-                        class="sapUiMediumMarginBottom"/>
-                    <Title text="Your cart is empty" level="H3"/>
+            <!-- CART PAGE HEADER -->
+            <HBox
+                width="100%"
+                justifyContent="SpaceBetween"
+                alignItems="Center"
+                wrap="Wrap"
+                class="sapUiSmallMarginBottom">
+                <VBox renderType="Bare">
+                    <Title text="Your Cart" level="H1" titleStyle="H2"/>
                     <Text
-                        text="Please explore the menu."
-                        class="sapUiTinyMarginTop sapUiSmallMarginBottom"/>
-                    <Button
-                        text="Continue Shopping"
-                        icon="sap-icon://meal"
-                        type="Emphasized"
-                        press=".onOpenMenu"/>
+                        text="{= (Number(${cart>/count}) || 0) + ' item(s) in your cart' }"
+                        class="sapUiTinyMarginTop"/>
                 </VBox>
+                <Button
+                    text="Continue Shopping"
+                    icon="sap-icon://meal"
+                    type="Transparent"
+                    press=".onOpenMenu"/>
+            </HBox>
 
-                <!-- ITEM CARDS -->
-                <VBox
-                    id="cartItemsList"
-                    items="{cart>/items}"
-                    visible="{= ${cart>/items}.length > 0 }"
-                    renderType="Bare">
+            <!-- EMPTY CART STATE -->
+            <VBox
+                visible="{= ${cart>/items}.length === 0 }"
+                alignItems="Center"
+                justifyContent="Center"
+                class="sapUiLargeMarginTop sapUiLargeMarginBottom"
+                renderType="Bare">
+                <core:Icon
+                    src="sap-icon://cart"
+                    size="3rem"
+                    color="Neutral"
+                    class="sapUiMediumMarginBottom"/>
+                <Title text="Your cart is empty" level="H3"/>
+                <Text
+                    text="Looks like you haven't added anything yet. Explore the menu and find something delicious."
+                    textAlign="Center"
+                    class="sapUiTinyMarginTop sapUiSmallMarginBottom"/>
+                <Button
+                    text="Explore Menu"
+                    icon="sap-icon://meal"
+                    type="Emphasized"
+                    press=".onOpenMenu"/>
+            </VBox>
 
-                    <Panel width="auto" class="cartItemCard sapUiTinyMarginBottom">
-                        <HBox alignItems="Start" justifyContent="SpaceBetween">
+            <!-- RESPONSIVE CART CONTENT: ITEMS + SUMMARY -->
+            <FlexBox
+                width="100%"
+                wrap="Wrap"
+                alignItems="Start"
+                justifyContent="SpaceBetween"
+                visible="{= ${cart>/items}.length > 0 }"
+                renderType="Bare">
 
-                            <!-- NAME, UNIT PRICE, QUANTITY -->
-                            <VBox renderType="Bare">
-                                <layoutData>
-                                    <FlexItemData growFactor="1"/>
-                                </layoutData>
+                <!-- LEFT: CART ITEMS -->
+                <VBox width="100%" renderType="Bare">
+                    <layoutData>
+                        <FlexItemData growFactor="1" baseSize="65%" minWidth="20rem"/>
+                    </layoutData>
 
-                                <Title text="{cart>Name}" level="H5" wrapping="true"/>
+                    <Title
+                        text="Items in your cart"
+                        level="H3"
+                        class="sapUiTinyMarginBottom"/>
 
-                                <Text
-                                    text="{= '₹' + (Number(${cart>Price}) || 0).toFixed(2) + ' each' }"
-                                    class="sapUiTinyMarginBottom"/>
+                    <VBox
+                        id="cartItemsList"
+                        items="{cart>/items}"
+                        renderType="Bare">
 
-                                <HBox alignItems="Center" class="quantityBox">
-                                    <Button
-                                        icon="sap-icon://less"
-                                        tooltip="Decrease quantity"
-                                        press=".onDecreaseCartItem"/>
+                        <Panel
+                            width="auto"
+                            class="cartItemCard sapUiTinyMarginBottom"
+                            backgroundDesign="Solid">
+                            <HBox
+                                alignItems="Center"
+                                justifyContent="SpaceBetween"
+                                wrap="Wrap">
+
+                                <!-- PRODUCT DETAILS AND QUANTITY -->
+                                <VBox renderType="Bare">
+                                    <layoutData>
+                                        <FlexItemData growFactor="1" minWidth="10rem"/>
+                                    </layoutData>
+                                    <Title
+                                        text="{cart>Name}"
+                                        level="H5"
+                                        wrapping="true"/>
                                     <Text
-                                        text="{cart>Quantity}"
-                                        width="2.5rem"
-                                        textAlign="Center"/>
+                                        text="{= '₹' + (Number(${cart>Price}) || 0).toFixed(2) + ' per item' }"
+                                        class="sapUiTinyMarginBottom"/>
+
+                                    <HBox
+                                        alignItems="Center"
+                                        class="quantityBox">
+                                        <Button
+                                            icon="sap-icon://less"
+                                            type="Transparent"
+                                            tooltip="Decrease quantity"
+                                            press=".onDecreaseCartItem"/>
+                                        <Text
+                                            text="{cart>Quantity}"
+                                            width="2.5rem"
+                                            textAlign="Center"
+                                            class="sapUiTinyMarginBegin sapUiTinyMarginEnd"/>
+                                        <Button
+                                            icon="sap-icon://add"
+                                            type="Emphasized"
+                                            tooltip="Increase quantity"
+                                            enabled="{= (Number(${cart>Quantity}) || 0) &lt; 10 }"
+                                            press=".onIncreaseCartItem"/>
+                                    </HBox>
+                                </VBox>
+
+                                <!-- LINE TOTAL AND REMOVE ACTION -->
+                                <VBox
+                                    alignItems="End"
+                                    renderType="Bare"
+                                    class="sapUiSmallMarginBegin">
+                                    <Title
+                                        level="H4"
+                                        wrapping="false"
+                                        text="{= '₹' + ((Number(${cart>Price}) || 0) * (Number(${cart>Quantity}) || 1)).toFixed(2) }"/>
                                     <Button
-                                        icon="sap-icon://add"
-                                        tooltip="Increase quantity"
-                                        enabled="{= (Number(${cart>Quantity}) || 0) &lt; 10 }"
-                                        press=".onIncreaseCartItem"/>
-                                </HBox>
-                            </VBox>
-
-                            <!-- LINE TOTAL + REMOVE -->
-                            <VBox alignItems="End" renderType="Bare">
-                                <Title
-                                    level="H4"
-                                    wrapping="false"
-                                    text="{= '₹' + ((Number(${cart>Price}) || 0) * (Number(${cart>Quantity}) || 1)).toFixed(2) }"
-                                    class="sapUiTinyMarginBottom"/>
-                                <Button
-                                    text="Remove"
-                                    icon="sap-icon://delete"
-                                    type="Transparent"
-                                    tooltip="Remove item"
-                                    press=".onRemoveCartItem"/>
-                            </VBox>
-
-                        </HBox>
-                    </Panel>
+                                        text="Remove"
+                                        icon="sap-icon://delete"
+                                        type="Transparent"
+                                        tooltip="Remove this item from your cart"
+                                        press=".onRemoveCartItem"
+                                        class="sapUiTinyMarginTop"/>
+                                </VBox>
+                            </HBox>
+                        </Panel>
+                    </VBox>
                 </VBox>
 
-                <!-- ORDER SUMMARY -->
-                <Panel
-                    id="cartOrderSummary"
-                    headerText="Order Summary"
-                    width="auto"
-                    visible="{= ${cart>/items}.length > 0 }"
-                    class="sapUiSmallMarginTop checkoutCard">
+                <!-- RIGHT: ORDER SUMMARY -->
+                <VBox width="100%" renderType="Bare">
+                    <layoutData>
+                        <FlexItemData growFactor="0" baseSize="32%" minWidth="17rem"/>
+                    </layoutData>
 
-                    <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
-                        <Text text="Items Total"/>
-                        <Text text="{= '₹' + (Number(${cart>/total}) || 0).toFixed(2) }"/>
-                    </HBox>
+                    <Panel
+                        id="cartOrderSummary"
+                        headerText="Order Summary"
+                        width="auto"
+                        class="checkoutCard sapUiSmallMarginBottom">
 
-                    <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
-                        <Text text="Delivery Fee"/>
-                        <Text text="FREE" class="freeDelivery"/>
-                    </HBox>
+                        <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
+                            <Text text="Total items"/>
+                            <ObjectStatus
+                                text="{= String(Number(${cart>/count}) || 0) }"
+                                state="Information"/>
+                        </HBox>
 
-                    <HBox justifyContent="SpaceBetween">
-                        <Text text="Platform Fee"/>
-                        <Text text="₹0.00"/>
-                    </HBox>
+                        <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                            <Text text="Items subtotal"/>
+                            <Text text="{= '₹' + (Number(${cart>/total}) || 0).toFixed(2) }"/>
+                        </HBox>
 
-                    <HBox class="bdDivider"/>
+                        <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                            <Text text="Delivery fee"/>
+                            <ObjectStatus text="FREE" state="Success"/>
+                        </HBox>
 
-                    <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMarginBottom">
-                        <Title text="Order Total" level="H4"/>
-                        <Title
-                            class="cartTotalValue"
-                            level="H4"
-                            text="{= '₹' + (Number(${cart>/total}) || 0).toFixed(2) }"/>
-                    </HBox>
+                        <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                            <Text text="Platform fee"/>
+                            <Text text="₹0.00"/>
+                        </HBox>
 
-                    <Button
-                        text="Proceed to Checkout"
-                        icon="sap-icon://locked"
-                        type="Emphasized"
-                        width="100%"
-                        enabled="{= (Number(${cart>/count}) || 0) > 0 }"
-                        press=".onProceedToCheckout"/>
+                        <HBox class="bdDivider sapUiTinyMarginTop sapUiTinyMarginBottom"/>
+
+                        <HBox
+                            justifyContent="SpaceBetween"
+                            alignItems="Center"
+                            class="sapUiSmallMarginBottom">
+                            <Title text="Order Total" level="H4"/>
+                            <Title
+                                class="cartTotalValue"
+                                level="H4"
+                                text="{= '₹' + (Number(${cart>/total}) || 0).toFixed(2) }"/>
+                        </HBox>
+
+                        <Button
+                            text="Proceed to Checkout"
+                            icon="sap-icon://locked"
+                            type="Emphasized"
+                            width="100%"
+                            enabled="{= (Number(${cart>/count}) || 0) > 0 }"
+                            press=".onProceedToCheckout"/>
+
+                        <Text
+                            text="Your order details will be confirmed in the next step."
+                            textAlign="Center"
+                            width="100%"
+                            class="sapUiTinyMarginTop"/>
+                    </Panel>
 
                     <Button
                         text="Continue Shopping"
                         icon="sap-icon://nav-back"
+                        type="Transparent"
                         width="100%"
-                        class="sapUiTinyMarginTop"
                         press=".onOpenMenu"/>
-                </Panel>
-
-                <Text
-                    visible="{= ${cart>/items}.length > 0 }"
-                    text="Review your cart, confirm delivery details, and place your order at checkout."
-                    textAlign="Center"
-                    width="100%"
-                    class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
-
-            </VBox>
-        </FlexBox>
+                </VBox>
+            </FlexBox>
+        </VBox>
     </VBox>
 
     <!-- ===================== 4. CUSTOMER CHECKOUT ===================== -->
