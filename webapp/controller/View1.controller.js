@@ -2559,7 +2559,11 @@ _updateCartTotals: function (aItems) {
             tax: 0,
             total: fTotal
         }
-    });
+    }, false);
+
+    // Notify every bound control immediately after replacing the tracking data.
+    // ProcessFlow also needs an explicit model update when its node collection changes.
+    oTrackModel.refresh(true);
 
     var oProcessFlow = this.byId("trackingFlow");
     if (
@@ -2567,6 +2571,7 @@ _updateCartTotals: function (aItems) {
         String(this.getView().getModel("app").getProperty("/section")) === "customerTracking"
     ) {
         oProcessFlow.updateModel();
+        oProcessFlow.invalidate();
     }
 },
 
