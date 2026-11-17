@@ -801,92 +801,92 @@
                                 liveChange=".onCheckoutPhoneChange"
                                 class="sapUiSmallMarginBottom"/>
 
-<!-- Delivery Address -->
-<Title
-    text="Delivery Address"
-    level="H4"
-    class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+                            <!-- Delivery Address -->
+                            <Title
+                                text="Delivery Address"
+                                level="H4"
+                                class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
 
-<!-- House / Flat Number -->
-<Label
-    text="House / Flat / Building No."
-    required="true"
-    labelFor="checkoutHouseNo"/>
+                            <!-- House / Flat Number -->
+                            <Label
+                                text="House / Flat / Building No."
+                                required="true"
+                                labelFor="checkoutHouseNo"/>
 
-<Input
-    id="checkoutHouseNo"
-    value="{checkout>/HouseNo}"
-    placeholder="e.g. Flat 302, ABC Apartments"
-    maxLength="100"
-    class="sapUiSmallMarginBottom"/>
+                            <Input
+                                id="checkoutHouseNo"
+                                value="{checkout>/HouseNo}"
+                                placeholder="e.g. Flat 302, ABC Apartments"
+                                maxLength="100"
+                                class="sapUiSmallMarginBottom"/>
 
-<!-- Street -->
-<Label
-    text="Street / Area"
-    required="true"
-    labelFor="checkoutStreet"/>
+                            <!-- Street -->
+                            <Label
+                                text="Street / Area"
+                                required="true"
+                                labelFor="checkoutStreet"/>
 
-<Input
-    id="checkoutStreet"
-    value="{checkout>/Street}"
-    placeholder="e.g. MG Road, Madhapur"
-    maxLength="100"
-    class="sapUiSmallMarginBottom"/>
+                            <Input
+                                id="checkoutStreet"
+                                value="{checkout>/Street}"
+                                placeholder="e.g. MG Road, Madhapur"
+                                maxLength="100"
+                                class="sapUiSmallMarginBottom"/>
 
-<!-- Landmark -->
-<Label
-    text="Landmark"
-    labelFor="checkoutLandmark"/>
+                            <!-- Landmark -->
+                            <Label
+                                text="Landmark"
+                                labelFor="checkoutLandmark"/>
 
-<Input
-    id="checkoutLandmark"
-    value="{checkout>/Landmark}"
-    placeholder="e.g. Near Metro Station"
-    maxLength="100"
-    class="sapUiSmallMarginBottom"/>
+                            <Input
+                                id="checkoutLandmark"
+                                value="{checkout>/Landmark}"
+                                placeholder="e.g. Near Metro Station"
+                                maxLength="100"
+                                class="sapUiSmallMarginBottom"/>
 
-<!-- City -->
-<Label
-    text="City"
-    required="true"
-    labelFor="checkoutCity"/>
+                            <!-- City -->
+                            <Label
+                                text="City"
+                                required="true"
+                                labelFor="checkoutCity"/>
 
-<Input
-    id="checkoutCity"
-    value="{checkout>/City}"
-    placeholder="Enter your city"
-    maxLength="50"
-     liveChange=".onCheckoutCityChange"
-    class="sapUiSmallMarginBottom"/>
+                            <Input
+                                id="checkoutCity"
+                                value="{checkout>/City}"
+                                placeholder="Enter your city"
+                                maxLength="50"
+                                liveChange=".onCheckoutCityChange"
+                                class="sapUiSmallMarginBottom"/>
 
-<!-- State -->
-<Label
-    text="State"
-    required="true"
-    labelFor="checkoutState"/>
+                            <!-- State -->
+                            <Label
+                                text="State"
+                                required="true"
+                                labelFor="checkoutState"/>
 
-<Input
-    id="checkoutState"
-    value="{checkout>/State}"
-    placeholder="Enter your state"
-    maxLength="50"
-     liveChange=".onCheckoutStateChange"
-    class="sapUiSmallMarginBottom"/>
+                            <Input
+                                id="checkoutState"
+                                value="{checkout>/State}"
+                                placeholder="Enter your state"
+                                maxLength="50"
+                                liveChange=".onCheckoutStateChange"
+                                class="sapUiSmallMarginBottom"/>
 
-<!-- PIN Code -->
-<Label
-    text="PIN Code"
-    required="true"
-    labelFor="checkoutPincode"/>
+                            <!-- PIN Code -->
+                            <Label
+                                text="PIN Code"
+                                required="true"
+                                labelFor="checkoutPincode"/>
 
-<Input
-    id="checkoutPincode"
-    value="{checkout>/Pincode}"
-    type="Tel"
-    maxLength="6"
+                            <Input
+                                id="checkoutPincode"
+                                value="{checkout>/Pincode}"
+                                type="Tel"
+                                maxLength="6"
 
-    placeholder="Enter 6-digit PIN code"
-     liveChange=".onCheckoutPincodeChange"/>
+                                placeholder="Enter 6-digit PIN code"
+                                liveChange=".onCheckoutPincodeChange"/>
 
 
                            

@@ -1444,132 +1444,163 @@ _updateCartTotals: function (aItems) {
 
 //8. CHECKOUT & ORDER SECTION
     onPlaceOrder: function () {
-            var oView = this.getView();
-            var oCheckout = oView.getModel("checkout");
-            var oCart = oView.getModel("cart");
-            var oApp = oView.getModel("app");
+    var oView = this.getView();
+    var oCheckout = oView.getModel("checkout");
+    var oCart = oView.getModel("cart");
+    var oApp = oView.getModel("app");
 
-            var oDetails = oCheckout.getData();
-            var aItems = oCart.getProperty("/items") || [];
+    var oDetails = oCheckout.getData();
+    var aItems = oCart.getProperty("/items") || [];
 
-            if (!aItems.length) {
-                MessageToast.show("Your cart is empty.");
-                oApp.setProperty("/section", "customerMenu");
-                return;
-            }
+    if (!aItems.length) {
+        MessageToast.show("Your cart is empty.");
+        oApp.setProperty("/section", "customerMenu");
+        return;
+    }
 
-            if (!oDetails.CustomerName ||
-                !oDetails.CustomerName.trim()) {
-                MessageToast.show("Please enter your name.");
-                return;
-            }
+    if (!oDetails.CustomerName ||
+        !oDetails.CustomerName.trim()) {
+        MessageToast.show("Please enter your name.");
+        return;
+    }
 
-            if (!/^[0-9]{10}$/.test(oDetails.Phone || "")) {
-                MessageToast.show("Enter a valid 10-digit mobile number.");
-                return;
-            }
+    if (!/^[0-9]{10}$/.test(oDetails.Phone || "")) {
+        MessageToast.show("Enter a valid 10-digit mobile number.");
+        return;
+    }
 
-            if (!oDetails.Address ||
-                !oDetails.Address.trim()) {
-                MessageToast.show("Please enter your delivery address.");
-                return;
-            }
+    if (!oDetails.HouseNo || !oDetails.HouseNo.trim()) {
+        MessageToast.show("Please enter House/Flat number.");
+        return;
+    }
 
-            var aOrders = [];
+    if (!oDetails.Street || !oDetails.Street.trim()) {
+        MessageToast.show("Please enter Street/Area.");
+        return;
+    }
 
-            try {
-                aOrders = JSON.parse(
-                    localStorage.getItem("biteDashOrders") || "[]"
-                );
+    if (!oDetails.City || !oDetails.City.trim()) {
+        MessageToast.show("Please enter City.");
+        return;
+    }
 
-                if (!Array.isArray(aOrders)) {
-                    aOrders = [];
-                }
-            } catch (e) {
-                MessageBox.error("Unable to read saved orders.");
-                return;
-            }
+    if (!oDetails.State || !oDetails.State.trim()) {
+        MessageToast.show("Please enter State.");
+        return;
+    }
 
-            var fTotal = Number(oCart.getProperty("/total")) || 0;
+    if (!/^[0-9]{6}$/.test(oDetails.Pincode || "")) {
+        MessageToast.show("Enter a valid 6-digit PIN code.");
+        return;
+    }
 
-            var iNextId = aOrders.reduce(function (iMax, oOrder) {
-                return Math.max(iMax, Number(oOrder.OrderID) || 0);
-            }, 0) + 1;
+    var aOrders = [];
 
-            var aPaymentMethods = [
-                "Cash on Delivery",
-                "UPI (demo)",
-                "Card (demo)"
-            ];
+    try {
+        aOrders = JSON.parse(
+            localStorage.getItem("biteDashOrders") || "[]"
+        );
 
-            var oOrder = {
-                OrderID: iNextId,
-                CustomerName: oDetails.CustomerName.trim(),
-                Phone: oDetails.Phone,
-                Address: oDetails.Address.trim(),
-                PaymentMethod:
-                    aPaymentMethods[oDetails.PaymentIndex] ||
-                    "Cash on Delivery",
-                Items: aItems.map(function (oItem) {
-                    return {
-                        ID: oItem.ID,
-                        Name: oItem.Name,
-                        Description: oItem.Description || "",
-                        Rating: Number(oItem.Rating) || 0,
-                        Price: Number(oItem.Price) || 0,
-                        Quantity: Number(oItem.Quantity) || 1
-                    };
-                }),
-                Total: fTotal,
-                OrderDate: new Date().toISOString(),
-                Status: "Placed"
+        if (!Array.isArray(aOrders)) {
+            aOrders = [];
+        }
+    } catch (e) {
+        MessageBox.error("Unable to read saved orders.");
+        return;
+    }
+
+    var fTotal = Number(oCart.getProperty("/total")) || 0;
+
+    var iNextId = aOrders.reduce(function (iMax, oOrder) {
+        return Math.max(iMax, Number(oOrder.OrderID) || 0);
+    }, 0) + 1;
+
+    var aPaymentMethods = [
+        "Cash on Delivery",
+        "UPI (demo)",
+        "Card (demo)"
+    ];
+
+    var oOrder = {
+        OrderID: iNextId,
+        CustomerName: oDetails.CustomerName.trim(),
+        Phone: oDetails.Phone,
+
+        Address:
+            oDetails.HouseNo + ", " +
+            oDetails.Street + ", " +
+            (oDetails.Landmark ? oDetails.Landmark + ", " : "") +
+            oDetails.City + ", " +
+            oDetails.State + " - " +
+            oDetails.Pincode,
+
+        PaymentMethod:
+            aPaymentMethods[oDetails.PaymentIndex] ||
+            "Cash on Delivery",
+
+        Items: aItems.map(function (oItem) {
+            return {
+                ID: oItem.ID,
+                Name: oItem.Name,
+                Description: oItem.Description || "",
+                Rating: Number(oItem.Rating) || 0,
+                Price: Number(oItem.Price) || 0,
+                Quantity: Number(oItem.Quantity) || 1
             };
+        }),
 
-            aOrders.push(oOrder);
+        Total: fTotal,
+        OrderDate: new Date().toISOString(),
+        Status: "Placed"
+    };
 
-            try {
-                localStorage.setItem(
-                    "biteDashOrders",
-                    JSON.stringify(aOrders)
-                );
-            } catch (e) {
-                MessageBox.error(
-                    "The order could not be saved in browser storage."
-                );
-                return;
+    aOrders.push(oOrder);
+
+    try {
+        localStorage.setItem(
+            "biteDashOrders",
+            JSON.stringify(aOrders)
+        );
+    } catch (e) {
+        MessageBox.error(
+            "The order could not be saved in browser storage."
+        );
+        return;
+    }
+
+    this._loadOrders();
+
+    oCart.setData({
+        items: [],
+        count: 0,
+        total: 0
+    });
+
+    oApp.setProperty("/cartCount", 0);
+
+    oCheckout.setData({
+        CustomerName: "",
+        Phone: "",
+        HouseNo: "",
+        Street: "",
+        Landmark: "",
+        City: "",
+        State: "",
+        Pincode: "",
+        PaymentIndex: 0
+    });
+
+    MessageBox.success(
+        "Your order has been placed successfully! Order ID: " +
+        oOrder.OrderID,
+        {
+            title: "Order Confirmed",
+            onClose: function () {
+                oApp.setProperty("/section", "customerOrders");
             }
-
-            // Refresh the order list immediately
-            this._loadOrders();
-
-            // Clear cart
-            oCart.setData({
-                items: [],
-                count: 0,
-                total: 0
-            });
-
-            oApp.setProperty("/cartCount", 0);
-
-            // Reset checkout form
-            oCheckout.setData({
-                CustomerName: "",
-                Phone: "",
-                Address: "",
-                PaymentIndex: 0
-            });
-
-            MessageBox.success(
-                "Your order has been placed successfully! Order ID: " +
-                oOrder.OrderID,
-                {
-                    title: "Order Confirmed",
-                    onClose: function () {
-                        oApp.setProperty("/section", "customerOrders");
-                    }
-                }
-            );
-}, 
+        }
+    );
+},
 
 //9.CUSTOMER ORDERS
     _prepareOrderedProducts: function () {
