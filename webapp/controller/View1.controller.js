@@ -1256,15 +1256,17 @@ onAddSelectedProductToCart: function () {
 
         if (iIndex !== -1) {
 
-            // Same product: increase quantity
+            // Same product: increase quantity and include it in the next order.
             aCartItems[iIndex].Quantity =
                 (Number(aCartItems[iIndex].Quantity) || 0) + 1;
+            aCartItems[iIndex].Selected = true;
 
         } else {
 
             // Different product: add a separate cart item
             var oNewItem = Object.assign({}, oProduct);
             oNewItem.Quantity = 1;
+            oNewItem.Selected = true;
 
             aCartItems.push(oNewItem);
         }
@@ -1597,7 +1599,7 @@ _updateCartTotals: function (aItems) {
         return;
     }
 
-    // Snapshot every cart line so all selected products go into ONE order.
+    // Snapshot only the selected cart lines into ONE order.
     var aOrderItems = aCartItems.map(function (oItem) {
         return {
             ID: oItem.ID,
@@ -1645,7 +1647,7 @@ _updateCartTotals: function (aItems) {
         "Card (demo)"
     ];
 
-    // Exactly ONE order record, containing ALL products from the cart.
+    // Exactly ONE order record, containing only the selected products.
     var oOrder = {
         OrderID: iNextId,
         CustomerName: oDetails.CustomerName.trim(),
