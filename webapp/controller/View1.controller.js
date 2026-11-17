@@ -153,6 +153,25 @@ onInit: function () {
     }.bind(this);
     window.addEventListener("storage", this._fnMenuStorageSync);
 
+    // Keep customer tracking live even when the browser does not deliver a
+    // storage event (for example, when the app is open in another tab/window).
+    // Only reload when the saved order data actually changes.
+    this._sLastOrdersSnapshot = localStorage.getItem("biteDashOrders") || "[]";
+    this._iOrdersSyncTimer = window.setInterval(function () {
+        var oApp = this.getView() && this.getView().getModel("app");
+        if (!oApp ||
+            !oApp.getProperty("/isLoggedIn") ||
+            oApp.getProperty("/role") !== "customer") {
+            return;
+        }
+
+        var sLatestSnapshot = localStorage.getItem("biteDashOrders") || "[]";
+        if (sLatestSnapshot !== this._sLastOrdersSnapshot) {
+            this._loadOrders();
+            this._loadReturns();
+        }
+    }.bind(this), 1500);
+
     // 16. Show the focus box on tab buttons only for Tab/arrow-key navigation
     this._initFocusMode();
 },
@@ -188,6 +207,10 @@ onInit: function () {
         document.removeEventListener("mousedown", this._fnFocusPointer, true);
         document.removeEventListener("touchstart", this._fnFocusPointer, true);
         window.removeEventListener("storage", this._fnMenuStorageSync);
+        if (this._iOrdersSyncTimer) {
+            window.clearInterval(this._iOrdersSyncTimer);
+            this._iOrdersSyncTimer = null;
+        }
         document.documentElement.classList.remove("bdTabbing");
     },
 
@@ -588,11 +611,11 @@ var aAlerts = [
 
     _loadOrders: function () {
     var aOrders = [];
+    var sOrdersSnapshot = localStorage.getItem("biteDashOrders") || "[]";
+    this._sLastOrdersSnapshot = sOrdersSnapshot;
 
     try {
-        aOrders = JSON.parse(
-            localStorage.getItem("biteDashOrders") || "[]"
-        );
+        aOrders = JSON.parse(sOrdersSnapshot);
 
         if (!Array.isArray(aOrders)) {
             aOrders = [];
