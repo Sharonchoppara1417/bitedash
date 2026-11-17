@@ -373,6 +373,9 @@ var aAlerts = [
         });
 
         var aCombined = aODataProducts.concat(aSavedItems);
+        aCombined = aCombined.filter(function (oProduct) {
+    return oProduct.Available !== false;
+});
 
         if (oProductsModel) {
             oProductsModel.setProperty("/items", aCombined);
@@ -2462,6 +2465,7 @@ _updateCartTotals: function (aItems) {
                 aSavedItems = JSON.parse(
                     localStorage.getItem("biteDashCustomMenu") || "[]"
                 );
+                that._loadProducts();
 
                 if (!Array.isArray(aSavedItems)) {
                     aSavedItems = [];
@@ -2486,6 +2490,7 @@ _updateCartTotals: function (aItems) {
             
                 Category: sCategory,
                 CategoryNames: sCategory,
+                 Available: true,
                 ReleaseDate: new Date().toISOString()
             };
             aSavedItems.push(oNewProduct);
@@ -2524,6 +2529,36 @@ _updateCartTotals: function (aItems) {
             );
 
             MessageToast.show("Menu item added successfully.");
+},
+onToggleAvailable: function (oEvent) {
+
+    var bAvailable = oEvent.getParameter("state");
+
+    var oContext = oEvent.getSource()
+        .getBindingContext("products");
+
+    var oProduct = oContext.getObject();
+
+    oProduct.Available = bAvailable;
+
+    var aItems = JSON.parse(
+        localStorage.getItem("biteDashCustomMenu") || "[]"
+    );
+
+    var iIndex = aItems.findIndex(function (oItem) {
+        return oItem.ID === oProduct.ID;
+    });
+
+    if (iIndex !== -1) {
+        aItems[iIndex].Available = bAvailable;
+
+        localStorage.setItem(
+            "biteDashCustomMenu",
+            JSON.stringify(aItems)
+        );
+    }
+
+    this.getView().getModel("products").refresh(true);
 },
     onEditMenuItem: function (oEvent) {
     var oView = this.getView();

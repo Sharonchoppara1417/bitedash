@@ -550,6 +550,7 @@
                 <Column importance="High" width="7rem" hAlign="End">
                     <Text text="Price"/>
                 </Column>
+              
             </columns>
 
             <items>
@@ -571,6 +572,7 @@
 
                         <Text
                             text="{= '₹ ' + (Number(${products>Price}) || 0).toFixed(2) }"/>
+                       
                     </cells>
                 </ColumnListItem>
             </items>
@@ -2572,7 +2574,9 @@
                                         state="{= ${products>Available} !== false }"
                                         change=".onToggleAvailable"
                                         tooltip="Available for ordering"/>
-                                    <Text text="Available" class="sapUiTinyMarginBegin"/>
+                                         
+
+
                                 </HBox>
                                 <HBox>
                                     <Button
