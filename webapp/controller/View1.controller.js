@@ -3432,6 +3432,14 @@ onToggleAvailable: function (oEvent) {
     );
 },
 
+    onOpenCustomerReturns: function () {
+    this._loadReturns();
+    this.getView().getModel("app").setProperty(
+        "/section",
+        "customerReturns"
+    );
+},
+
     onSubmitReturnRequest: function () {
     var oSelectedOrder = this.getView()
         .getModel("selectedOrder").getData();
@@ -3483,9 +3491,11 @@ onToggleAvailable: function (oEvent) {
     this._loadOrders();
     this._loadReturns();
 
+    this._loadReturns();
+
     this.getView().getModel("app").setProperty(
         "/section",
-        "customerOrders"
+        "customerReturns"
     );
 
     sap.m.MessageToast.show("Return request submitted successfully.");
@@ -3564,6 +3574,10 @@ onToggleAvailable: function (oEvent) {
 
     if (sNewStatus === "Rejected") {
         oOrder.RefundStatus = "Not Applicable";
+    }
+
+    if (sNewStatus === "Approved") {
+        oOrder.ReturnApprovedAt = new Date().toLocaleString();
     }
 
     if (sNewStatus === "Pickup Scheduled") {
