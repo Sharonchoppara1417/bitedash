@@ -1657,6 +1657,7 @@ _updateCartTotals: function (aItems) {
     // Exactly ONE order record, containing only the selected products.
     var oOrder = {
         OrderID: iNextId,
+        CustomerUsername: oApp.getProperty("/currentUser") || "customer",
         CustomerName: oDetails.CustomerName.trim(),
         Phone: oDetails.Phone,
         Address:
@@ -1744,7 +1745,26 @@ _updateCartTotals: function (aItems) {
     var oOrdersModel = oView.getModel("orderData");
     var aOrders = oOrdersModel.getProperty("/items") || [];
 
-    var aOrderedProducts = aOrders.map(function (oOrder) {
+    var oAppModel = oView.getModel("app");
+    var sCurrentUser = oAppModel
+        ? oAppModel.getProperty("/currentUser")
+        : null;
+    var sCurrentRole = oAppModel
+        ? oAppModel.getProperty("/role")
+        : "customer";
+
+    // Customers see only their own orders. The restaurant keeps access to
+    // the complete order list. Older demo orders without an owner remain
+    // visible to the original shared "customer" demo account.
+    var aVisibleOrders = sCurrentRole === "business"
+        ? aOrders
+        : aOrders.filter(function (oOrder) {
+            return oOrder.CustomerUsername
+                ? oOrder.CustomerUsername === sCurrentUser
+                : sCurrentUser === "customer";
+        });
+
+    var aOrderedProducts = aVisibleOrders.map(function (oOrder) {
 
         var aItems = (oOrder.Items || []).map(function (oItem) {
             return {
@@ -1765,6 +1785,7 @@ _updateCartTotals: function (aItems) {
             OrderID: oOrder.OrderID,
             OrderDate: oOrder.OrderDate,
             CustomerName: oOrder.CustomerName,
+            CustomerUsername: oOrder.CustomerUsername || "customer",
             Phone: oOrder.Phone,
             Address: oOrder.Address,
             PaymentMethod: oOrder.PaymentMethod,
@@ -2371,7 +2392,25 @@ _updateCartTotals: function (aItems) {
         return;
     }
 
-    this._updateCustomerTrackingModel(oSelected);
+    // Always resolve the order again from saved data so tracking never
+    // opens an older in-memory status after refresh or a new login.
+    var aLatestOrders = oView.getModel("orderData").getProperty("/items") || [];
+    var oLatestOrder = aLatestOrders.find(function (oOrder) {
+        return String(oOrder.OrderID) === String(oSelected.OrderID);
+    });
+
+    if (!oLatestOrder) {
+        MessageToast.show("This order is no longer available.");
+        return;
+    }
+
+    oView.getModel("selectedOrderedProduct").setData(
+        Object.assign({}, oLatestOrder)
+    );
+    oView.getModel("selectedOrder").setData(
+        Object.assign({}, oLatestOrder)
+    );
+    this._updateCustomerTrackingModel(oLatestOrder);
 
     // Navigate to the customer tracking page.
     oView.getModel("app").setProperty("/role", "customer");
@@ -3840,6 +3879,11 @@ onLogin: function () {
 
     oView.byId("usernameInput").setValue("");
     oView.byId("passwordInput").setValue("");
+
+    // Reload saved orders after every successful login. This restores the
+    // latest restaurant-updated status in the customer's My Orders list.
+    this._loadOrders();
+    this._loadReturns();
 
     MessageToast.show(
         sLoginRole === "customer"
