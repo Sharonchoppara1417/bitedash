@@ -2726,10 +2726,14 @@ onToggleAvailable: function (oEvent) {
                     );
                     return;
                 }
-
                 oProductsModel.refresh(true);
+
+                that._loadProducts();
+
                 oDialog.close();
+
                 MessageToast.show("Menu item updated successfully.");
+              
             }
         }),
         endButton: new sap.m.Button({
