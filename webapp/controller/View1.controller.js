@@ -143,6 +143,13 @@ onInit: function () {
         ) {
             this._syncMenuAcrossTabs();
         }
+
+        // Keep customer order lists and an already-open tracking page in sync
+        // when the restaurant updates an order in another browser tab.
+        if (oEvent.key === "biteDashOrders") {
+            this._loadOrders();
+            this._loadReturns();
+        }
     }.bind(this);
     window.addEventListener("storage", this._fnMenuStorageSync);
 
@@ -1797,6 +1804,20 @@ _updateCartTotals: function (aItems) {
             );
         }
     }
+
+    // If the customer is already viewing this order's tracking page,
+    // rebuild its ProcessFlow from the latest saved order status.
+    var oTrackModel = oView.getModel("trackOrder");
+    var oTrackData = oTrackModel && oTrackModel.getData();
+    if (oTrackData && oTrackData.orderId != null) {
+        var oLatestTrackedOrder = aOrders.find(function (oOrder) {
+            return String(oOrder.OrderID) === String(oTrackData.orderId);
+        });
+
+        if (oLatestTrackedOrder) {
+            this._updateCustomerTrackingModel(oLatestTrackedOrder);
+        }
+    }
 },
     onOrderedProductSelect: function (oEvent) {
     var oContext = oEvent.getSource()
@@ -2335,10 +2356,7 @@ _updateCartTotals: function (aItems) {
     this.onTrackSelectedOrder();
 },
     onTrackSelectedOrder: function () {
-
     var oView = this.getView();
-
-    // STEP 1: Get selected order
     var oSelectedModel = oView.getModel("selectedOrderedProduct");
 
     if (!oSelectedModel) {
@@ -2353,15 +2371,23 @@ _updateCartTotals: function (aItems) {
         return;
     }
 
-    // STEP 2: Get tracking model
+    this._updateCustomerTrackingModel(oSelected);
+
+    // Navigate to the customer tracking page.
+    oView.getModel("app").setProperty("/role", "customer");
+    oView.getModel("app").setProperty("/section", "customerTracking");
+},
+
+    // Build or refresh the customer tracking model from the latest order data.
+    // This method does not navigate, so it can also run after restaurant updates.
+    _updateCustomerTrackingModel: function (oOrder) {
+    var oView = this.getView();
     var oTrackModel = oView.getModel("trackOrder");
 
-    if (!oTrackModel) {
-        MessageBox.error("Tracking model is not initialized.");
+    if (!oTrackModel || !oOrder || oOrder.OrderID == null) {
         return;
     }
 
-    // STEP 3: Tracking statuses
     var aStatuses = [
         "Placed",
         "Approved",
@@ -2382,18 +2408,13 @@ _updateCartTotals: function (aItems) {
         "sap-icon://flag"
     ];
 
-    // STEP 4: Convert order status
-    var sOriginalStatus = oSelected.Status || "Placed";
-
+    var sOriginalStatus = oOrder.Status || "Placed";
     var oStatusMap = {
         "Accepted": "Approved",
         "Preparing": "Prepared"
     };
-
     var sStatus = oStatusMap[sOriginalStatus] || sOriginalStatus;
-
     var bCancelled = sStatus === "Cancelled";
-
     var iCurrentIndex = aStatuses.indexOf(sStatus);
 
     if (!bCancelled && iCurrentIndex === -1) {
@@ -2401,7 +2422,6 @@ _updateCartTotals: function (aItems) {
         sStatus = "Placed";
     }
 
-    // STEP 5: Create ProcessFlow lanes
     var aLanes = aStatuses.map(function (sLabel, iIndex) {
         return {
             id: String(iIndex + 1),
@@ -2411,11 +2431,8 @@ _updateCartTotals: function (aItems) {
         };
     });
 
-    // STEP 6: Create ProcessFlow nodes
     var aNodes = aStatuses.map(function (sLabel, iIndex) {
-
-        var bCompleted = !bCancelled &&
-            iIndex <= iCurrentIndex;
+        var bCompleted = !bCancelled && iIndex <= iCurrentIndex;
 
         return {
             id: String(iIndex + 1),
@@ -2423,112 +2440,66 @@ _updateCartTotals: function (aItems) {
             title: sLabel,
             state: bCompleted ? "Positive" : "Neutral",
             stateText: bCompleted ? "Completed" : "Pending",
-
-            texts: [
-                bCompleted ? "Completed" : "Pending"
-            ],
-
+            texts: [bCompleted ? "Completed" : "Pending"],
             children: iIndex < aStatuses.length - 1
                 ? [String(iIndex + 2)]
                 : []
         };
     });
 
-    // STEP 7: Prepare order items
-    var aItems = (oSelected.Items || []).map(function (oItem) {
-
+    var aItems = (oOrder.Items || []).map(function (oItem) {
         return {
             name: oItem.Name || "Food item",
             qty: Number(oItem.Quantity) || 1,
             price: Number(oItem.Price) || 0,
             notes: oItem.Description || ""
         };
-
     });
 
-    // STEP 8: Calculate subtotal
     var fSubtotal = aItems.reduce(function (fTotal, oItem) {
-
         return fTotal + (oItem.price * oItem.qty);
-
     }, 0);
 
-    var fTotal = Number(oSelected.Total);
-
+    var fTotal = Number(oOrder.Total);
     if (!isFinite(fTotal)) {
         fTotal = fSubtotal;
     }
 
-    // STEP 9: Prepare tracking information
-    var oTrackData = {
-
-        orderId: oSelected.OrderID,
-
-        // Display actual order status
+    oTrackModel.setData({
+        orderId: oOrder.OrderID,
         status: sOriginalStatus,
-
-        customerName: oSelected.CustomerName || "",
-        address: oSelected.Address || "",
-        paymentMode: oSelected.PaymentMethod || "Cash on Delivery",
-
+        customerName: oOrder.CustomerName || "",
+        address: oOrder.Address || "",
+        paymentMode: oOrder.PaymentMethod || "Cash on Delivery",
         lanes: aLanes,
         nodes: aNodes,
-
         steps: aStatuses.map(function (sLabel, iIndex) {
-
-            var bDone = !bCancelled &&
-                iIndex <= iCurrentIndex;
-
+            var bDone = !bCancelled && iIndex <= iCurrentIndex;
             return {
                 name: sLabel,
                 done: bDone,
                 last: iIndex === aStatuses.length - 1,
                 time: bDone ? "Completed" : "Pending"
             };
-
         }),
-
         items: aItems,
-
         bill: {
             subtotal: fSubtotal,
             deliveryFee: 0,
             tax: 0,
             total: fTotal
         }
-    };
+    });
 
-    // STEP 10: Update tracking model
-    oTrackModel.setData(oTrackData);
-
-    // STEP 11: Synchronize selected order
-    var oSelectedOrderModel = oView.getModel("selectedOrder");
-
-    if (oSelectedOrderModel) {
-        oSelectedOrderModel.setData(
-            Object.assign({}, oSelected)
-        );
-    }
-
-    // STEP 12: Navigate to tracking page
-    oView.getModel("app").setProperty(
-        "/role",
-        "customer"
-    );
-
-    oView.getModel("app").setProperty(
-        "/section",
-        "customerTracking"
-    );
-
-    // STEP 13: Refresh ProcessFlow
     var oProcessFlow = this.byId("trackingFlow");
-
-    if (oProcessFlow) {
+    if (
+        oProcessFlow &&
+        String(this.getView().getModel("app").getProperty("/section")) === "customerTracking"
+    ) {
         oProcessFlow.updateModel();
     }
-
 },
+
     onTrackingBack: function () {
             this._loadOrders();
 
