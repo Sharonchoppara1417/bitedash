@@ -3491,8 +3491,6 @@ onToggleAvailable: function (oEvent) {
     this._loadOrders();
     this._loadReturns();
 
-    this._loadReturns();
-
     this.getView().getModel("app").setProperty(
         "/section",
         "customerReturns"
