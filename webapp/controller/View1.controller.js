@@ -1428,6 +1428,8 @@ _updateCartTotals: function (aItems) {
 
     var iCount = 0;
     var fTotal = 0;
+    var iSelectedCount = 0;
+    var fSelectedTotal = 0;
 
     aItems.forEach(function (oItem) {
         var iQuantity = Math.max(
@@ -1442,14 +1444,26 @@ _updateCartTotals: function (aItems) {
 
         oItem.Quantity = iQuantity;
 
+        // New cart items are included in the next order by default.
+        if (typeof oItem.Selected === "undefined") {
+            oItem.Selected = true;
+        }
+
         iCount += iQuantity;
         fTotal += fPrice * iQuantity;
+
+        if (oItem.Selected !== false) {
+            iSelectedCount += iQuantity;
+            fSelectedTotal += fPrice * iQuantity;
+        }
     });
 
-    // Update cart model
+    // Keep full-cart totals separate from the current order selection.
     oCart.setProperty("/items", aItems);
     oCart.setProperty("/count", iCount);
     oCart.setProperty("/total", Number(fTotal.toFixed(2)));
+    oCart.setProperty("/selectedCount", iSelectedCount);
+    oCart.setProperty("/selectedTotal", Number(fSelectedTotal.toFixed(2)));
 
     // Update application cart counter
     if (oApp) {
@@ -1476,10 +1490,35 @@ _updateCartTotals: function (aItems) {
         return;
     }
 
-    // Keep the cart count and total synchronized before navigating
+    // Keep the full cart totals and selected-item totals synchronized.
     this._updateCartTotals(aItems);
 
+    var aSelectedItems = aItems.filter(function (oItem) {
+        return oItem.Selected !== false;
+    });
+
+    if (!aSelectedItems.length) {
+        sap.m.MessageToast.show(
+            "Select at least one product for this order."
+        );
+        return;
+    }
+
+    // Checkout contains only the products selected for this order.
+    oCart.setProperty("/checkoutItems", aSelectedItems.map(function (oItem) {
+        return Object.assign({}, oItem);
+    }));
+    oCart.setProperty("/checkoutCount", Number(oCart.getProperty("/selectedCount")) || 0);
+    oCart.setProperty("/checkoutTotal", Number(oCart.getProperty("/selectedTotal")) || 0);
+
     oApp.setProperty("/section", "checkout");
+},
+    onCartItemSelectionChange: function () {
+    var oCart = this.getView().getModel("cart");
+
+    if (oCart) {
+        this._updateCartTotals(oCart.getProperty("/items") || []);
+    }
 },
     onBackToCart: function () {
     var oApp = this.getView().getModel("app");
@@ -1508,11 +1547,18 @@ _updateCartTotals: function (aItems) {
     }
 
     var oDetails = oCheckout.getData() || {};
-    var aCartItems = oCart.getProperty("/items") || [];
+    var aAllCartItems = oCart.getProperty("/items") || [];
+    var aCartItems = oCart.getProperty("/checkoutItems") || [];
 
-    if (!aCartItems.length) {
+    if (!aAllCartItems.length) {
         MessageToast.show("Your cart is empty.");
         oApp.setProperty("/section", "customerMenu");
+        return;
+    }
+
+    if (!aCartItems.length) {
+        MessageToast.show("Please select products for this order from your cart.");
+        oApp.setProperty("/section", "customerCart");
         return;
     }
 
@@ -1639,13 +1685,21 @@ _updateCartTotals: function (aItems) {
     // Refresh customer and restaurant order views from the same saved order.
     this._loadOrders();
 
-    oCart.setData({
-        items: [],
-        count: 0,
-        total: 0
+    // Remove only the products included in this order.
+    // Unselected products remain in the cart for the customer's next order.
+    var oOrderedIds = {};
+    aOrderItems.forEach(function (oItem) {
+        oOrderedIds[String(oItem.ID)] = true;
     });
 
-    oApp.setProperty("/cartCount", 0);
+    var aRemainingCartItems = aAllCartItems.filter(function (oItem) {
+        return !oOrderedIds[String(oItem.ID)];
+    });
+
+    this._updateCartTotals(aRemainingCartItems);
+    oCart.setProperty("/checkoutItems", []);
+    oCart.setProperty("/checkoutCount", 0);
+    oCart.setProperty("/checkoutTotal", 0);
 
     oCheckout.setData({
         CustomerName: "",
