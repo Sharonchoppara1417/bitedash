@@ -272,6 +272,21 @@
                     </customData>
 
                 </Button>
+
+                <Button
+                    text="Returns"
+                    icon="sap-icon://undo"
+                    press=".onNavigate"
+                    type="Transparent">
+
+                    <customData>
+                        <core:CustomData
+                            key="section"
+                            value="customerReturns"/>
+                    </customData>
+
+                </Button>
+
                 <ToolbarSpacer/>
 
                 <Button
