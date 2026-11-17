@@ -349,207 +349,152 @@ var aAlerts = [
         oProductsModel.setProperty("/loading", true);
     }
 
-    // Read locally saved menu items
-    function getLocalItems() {
-        try {
-            var aItems = JSON.parse(
-                localStorage.getItem("biteDashCustomMenu") || "[]"
-            );
+    if (!oCategoriesModel) {
+        oCategoriesModel = new sap.ui.model.json.JSONModel({ items: [] });
+        oView.setModel(oCategoriesModel, "categories");
+    }
 
-            return Array.isArray(aItems) ? aItems : [];
+    function readLocalArray(sKey) {
+        try {
+            var vData = JSON.parse(localStorage.getItem(sKey) || "[]");
+            return Array.isArray(vData) ? vData : [];
         } catch (e) {
-            console.error("Could not read local menu items:", e);
+            console.error("Could not read " + sKey + ":", e);
             return [];
         }
     }
 
-    // Combine OData products with locally saved menu items
-    function loadLocalItems(aODataProducts) {
-        var aSavedItems = getLocalItems();
-        var aOverrides = [];
+    function publishProducts(aODataProducts) {
+        var aCustomItems = readLocalArray("biteDashCustomMenu");
+        var aOverrides = readLocalArray("biteDashMenuOverrides");
 
-        // Apply locally persisted edits to OData products so both menu
-        // screens always receive the same latest product details.
-        try {
-            var vOverrides = JSON.parse(
-                localStorage.getItem("biteDashMenuOverrides") || "[]"
-            );
-            aOverrides = Array.isArray(vOverrides) ? vOverrides : [];
-        } catch (e) {
-            console.error("Could not read saved menu overrides:", e);
-        }
+        // Apply saved edits to OData products and default availability to ON.
+        var aBaseProducts = (aODataProducts || []).map(function (oProduct) {
+            var oCopy = Object.assign({
+                Available: true,
+                Category: "",
+                CategoryNames: ""
+            }, oProduct);
 
-        aODataProducts = aODataProducts.map(function (oProduct) {
             var oOverride = aOverrides.find(function (oItem) {
-                return String(oItem.ID) === String(oProduct.ID);
+                return String(oItem.ID) === String(oCopy.ID);
             });
-            return oOverride ? Object.assign({}, oProduct, oOverride) : oProduct;
+
+            return oOverride ? Object.assign(oCopy, oOverride) : oCopy;
         });
 
-        aSavedItems.forEach(function (oItem) {
-            oItem.CategoryNames =
-                oItem.CategoryNames || oItem.Category || "Food";
+        aCustomItems = aCustomItems.map(function (oItem) {
+            return Object.assign({
+                Available: true,
+                Category: "Food",
+                CategoryNames: "Food"
+            }, oItem);
         });
 
-        // Keep unavailable products in the shared model so the
-        // restaurant can switch them back on. Customer filtering is
-        // handled separately in _applyFoodFilters.
-        var aCombined = aODataProducts.concat(aSavedItems);
+        // Do not remove unavailable products here. Restaurant must be able
+        // to switch them ON again; customer list filters them separately.
+        var aCombined = aBaseProducts.concat(aCustomItems);
 
         if (oProductsModel) {
             oProductsModel.setProperty("/items", aCombined);
             oProductsModel.setProperty("/loading", false);
+            oProductsModel.refresh(true);
         }
-        // Refresh order details after product data becomes available.
-that._prepareOrderedProducts();
 
         if (oAppModel) {
             oAppModel.setProperty("/menuCount", aCombined.length);
         }
+
+        that._prepareOrderedProducts();
         that._refreshBusinessHome();
 
-        // Apply the current search and category filters
         var oSearch = oView.byId("foodSearchField");
-
         if (oView.byId("foodMenuList")) {
-            that._applyFoodFilters(
-                oSearch ? oSearch.getValue() : ""
-            );
+            that._applyFoodFilters(oSearch ? oSearch.getValue() : "");
         }
+
+        console.log("BiteDash products published:", {
+            oDataCount: (aODataProducts || []).length,
+            customCount: aCustomItems.length,
+            totalCount: aCombined.length
+        });
     }
 
-    // Check that the OData model exists
-    if (!oODataModel) {
-        loadLocalItems([]);
-
-        MessageBox.error(
-            "OData model is missing. Please check manifest.json."
-        );
+    if (!oODataModel || typeof oODataModel.read !== "function") {
+        publishProducts([]);
+        MessageBox.error("OData model is missing. Check the mainService configuration in manifest.json.");
         return;
     }
 
-    // Ensure the categories model exists
-    if (!oCategoriesModel) {
-        oCategoriesModel = new sap.ui.model.json.JSONModel({
-            items: []
-        });
-
-        oView.setModel(oCategoriesModel, "categories");
-    }
-
-    // First load categories, then load products
+    // Categories are supplementary. A category endpoint error must never
+    // prevent the main Products entity set from loading.
     oODataModel.read("/Categories", {
         success: function (oCategoryData) {
-            var aCategories = oCategoryData.results || [];
-
-            oCategoriesModel.setProperty("/items", aCategories);
-
-            console.log("Categories loaded:", aCategories);
-
-            // Load products and their category relationships
-            oODataModel.read("/Products", {
-                urlParameters: {
-                    "$expand": "Categories"
-                },
-
-                success: function (oProductData) {
-                    var aProducts = oProductData.results || [];
-
-                    aProducts.forEach(function (oProduct) {
-                        var vCategories = oProduct.Categories;
-                        var aProductCategories = [];
-
-                        if (vCategories) {
-                            if (Array.isArray(vCategories.results)) {
-                                aProductCategories = vCategories.results;
-                            } else if (Array.isArray(vCategories)) {
-                                aProductCategories = vCategories;
-                            }
-                        }
-
-                        // Map category names from the expanded relationship
-                        var aNames = aProductCategories
-                            .map(function (oCategory) {
-                                return oCategory.Name;
-                            })
-                            .filter(Boolean);
-
-                        oProduct.CategoryNames = aNames.join(" ");
-
-                        // Keep a single category field for compatibility
-                        oProduct.Category =
-                            aNames.length > 0 ? aNames[0] : "";
-                    });
-
-                    loadLocalItems(aProducts);
-
-                    MessageToast.show(
-                        aProducts.length + " OData products loaded."
-                    );
-
-                    console.log("Products with categories:", aProducts);
-                },
-
-                error: function (oError) {
-                    console.error("Loading products failed:", oError);
-
-                    loadLocalItems([]);
-
-                    MessageBox.error(
-                        "Products could not be loaded. " +
-                        "Locally saved menu items are still available. " +
-                        "Check the Products request in the Network tab."
-                    );
-                }
-            });
+            oCategoriesModel.setProperty("/items", oCategoryData.results || []);
         },
-
         error: function (oError) {
-            console.error("Loading categories failed:", oError);
+            console.warn("Categories could not be loaded; loading products independently.", oError);
+        }
+    });
 
-            // Still try loading products if categories cannot be loaded
+    // Try the expanded response first to retain category names.
+    // Some OData V3 hosts reject $expand, so fall back to plain /Products.
+    oODataModel.read("/Products", {
+        urlParameters: {
+            "$expand": "Categories"
+        },
+        success: function (oProductData) {
+            var aProducts = oProductData.results || [];
+
+            aProducts.forEach(function (oProduct) {
+                var vCategories = oProduct.Categories;
+                var aProductCategories = [];
+
+                if (vCategories) {
+                    aProductCategories = Array.isArray(vCategories.results)
+                        ? vCategories.results
+                        : (Array.isArray(vCategories) ? vCategories : []);
+                }
+
+                var aNames = aProductCategories.map(function (oCategory) {
+                    return oCategory.Name;
+                }).filter(Boolean);
+
+                oProduct.CategoryNames = aNames.join(" ");
+                oProduct.Category = aNames[0] || "";
+            });
+
+            publishProducts(aProducts);
+            MessageToast.show(aProducts.length + " OData products loaded.");
+        },
+        error: function (oExpandError) {
+            console.warn("Products with category expansion failed. Retrying plain Products request.", oExpandError);
+
             oODataModel.read("/Products", {
-                urlParameters: {
-                    "$expand": "Categories"
-                },
-
                 success: function (oProductData) {
                     var aProducts = oProductData.results || [];
 
                     aProducts.forEach(function (oProduct) {
-                        var vCategories = oProduct.Categories;
-                        var aProductCategories = [];
-
-                        if (vCategories) {
-                            aProductCategories = Array.isArray(vCategories.results)
-                                ? vCategories.results
-                                : (Array.isArray(vCategories) ? vCategories : []);
-                        }
-
-                        var aNames = aProductCategories
-                            .map(function (oCategory) {
-                                return oCategory.Name;
-                            })
-                            .filter(Boolean);
-
-                        oProduct.CategoryNames = aNames.join(" ");
-                        oProduct.Category = aNames[0] || "";
+                        oProduct.Category = oProduct.Category || "";
+                        oProduct.CategoryNames = oProduct.CategoryNames || "";
                     });
 
-                    loadLocalItems(aProducts);
-                },
-
-                error: function (oProductError) {
-                    console.error(
-                        "Loading products failed:",
-                        oProductError
+                    publishProducts(aProducts);
+                    MessageToast.show(
+                        aProducts.length + " OData products loaded (without category expansion)."
                     );
+                },
+                error: function (oProductError) {
+                    console.error("OData Products request failed:", oProductError);
+                    publishProducts([]);
 
-                    loadLocalItems([]);
+                    var sStatus = oProductError && oProductError.statusCode
+                        ? " (HTTP " + oProductError.statusCode + ")"
+                        : "";
 
                     MessageBox.error(
-                        "Products could not be loaded from OData. " +
-                        "Locally saved menu items are still available."
+                        "OData Products could not be loaded" + sStatus +
+                        ". Check the /V3/OData/OData.svc/Products request in the browser Network tab."
                     );
                 }
             });
