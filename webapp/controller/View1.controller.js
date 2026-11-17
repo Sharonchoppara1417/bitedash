@@ -1119,14 +1119,9 @@ onMenuProductSelect: function (oEvent) {
 
     }
 
-    // STEP 4: Customers should only see products currently available.
-    aFilters.push(new Filter(
-        "Available",
-        FilterOperator.NE,
-        false
-    ));
-
-    // STEP 5: Apply search, category and availability filters together.
+    // STEP 4: Do not filter by availability. Customers should see every
+    // OData product and every manually added item, including unavailable
+    // products, with the status displayed in green or red in the table.
     oBinding.filter(aFilters);
 
 },
