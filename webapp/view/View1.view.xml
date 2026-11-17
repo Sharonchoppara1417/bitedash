@@ -749,7 +749,7 @@
                         <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
                             <Text text="Total items"/>
                             <ObjectStatus
-                                text="{= String(Number(${cart>/count}) || 0) }"
+                                text="{cart>/count}"
                                 state="Information"/>
                         </HBox>
 
