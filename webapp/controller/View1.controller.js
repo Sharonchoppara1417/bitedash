@@ -391,10 +391,10 @@ var aAlerts = [
                 oItem.CategoryNames || oItem.Category || "Food";
         });
 
+        // Keep unavailable products in the shared model so the
+        // restaurant can switch them back on. Customer filtering is
+        // handled separately in _applyFoodFilters.
         var aCombined = aODataProducts.concat(aSavedItems);
-        aCombined = aCombined.filter(function (oProduct) {
-    return oProduct.Available !== false;
-});
 
         if (oProductsModel) {
             oProductsModel.setProperty("/items", aCombined);
@@ -1174,7 +1174,14 @@ onMenuProductSelect: function (oEvent) {
 
     }
 
-    // STEP 4: Apply all filters
+    // STEP 4: Customers should only see products currently available.
+    aFilters.push(new Filter(
+        "Available",
+        FilterOperator.NE,
+        false
+    ));
+
+    // STEP 5: Apply search, category and availability filters together.
     oBinding.filter(aFilters);
 
 },
@@ -2549,34 +2556,82 @@ _updateCartTotals: function (aItems) {
             MessageToast.show("Menu item added successfully.");
 },
 onToggleAvailable: function (oEvent) {
-
     var bAvailable = oEvent.getParameter("state");
+    var oContext = oEvent.getSource().getBindingContext("products");
 
-    var oContext = oEvent.getSource()
-        .getBindingContext("products");
-
-    var oProduct = oContext.getObject();
-
-    oProduct.Available = bAvailable;
-
-    var aItems = JSON.parse(
-        localStorage.getItem("biteDashCustomMenu") || "[]"
-    );
-
-    var iIndex = aItems.findIndex(function (oItem) {
-        return oItem.ID === oProduct.ID;
-    });
-
-    if (iIndex !== -1) {
-        aItems[iIndex].Available = bAvailable;
-
-        localStorage.setItem(
-            "biteDashCustomMenu",
-            JSON.stringify(aItems)
-        );
+    if (!oContext) {
+        MessageToast.show("Could not identify this menu item.");
+        return;
     }
 
-    this.getView().getModel("products").refresh(true);
+    var oProduct = Object.assign({}, oContext.getObject(), {
+        Available: bAvailable
+    });
+    var oProductsModel = this.getView().getModel("products");
+    var aProducts = oProductsModel.getProperty("/items") || [];
+    var sProductId = String(oProduct.ID);
+
+    // Update the shared in-memory model immediately.
+    var iProductIndex = aProducts.findIndex(function (oItem) {
+        return String(oItem.ID) === sProductId;
+    });
+    if (iProductIndex !== -1) {
+        aProducts[iProductIndex] = oProduct;
+        oProductsModel.setProperty("/items", aProducts);
+    }
+
+    // Persist custom items and OData item overrides separately.
+    try {
+        var aCustomItems = JSON.parse(
+            localStorage.getItem("biteDashCustomMenu") || "[]"
+        );
+        if (!Array.isArray(aCustomItems)) {
+            aCustomItems = [];
+        }
+
+        var iCustomIndex = aCustomItems.findIndex(function (oItem) {
+            return String(oItem.ID) === sProductId;
+        });
+
+        if (iCustomIndex !== -1) {
+            aCustomItems[iCustomIndex] = oProduct;
+            localStorage.setItem(
+                "biteDashCustomMenu",
+                JSON.stringify(aCustomItems)
+            );
+        } else {
+            var aOverrides = JSON.parse(
+                localStorage.getItem("biteDashMenuOverrides") || "[]"
+            );
+            if (!Array.isArray(aOverrides)) {
+                aOverrides = [];
+            }
+
+            var iOverrideIndex = aOverrides.findIndex(function (oItem) {
+                return String(oItem.ID) === sProductId;
+            });
+
+            if (iOverrideIndex === -1) {
+                aOverrides.push(oProduct);
+            } else {
+                aOverrides[iOverrideIndex] = oProduct;
+            }
+
+            localStorage.setItem(
+                "biteDashMenuOverrides",
+                JSON.stringify(aOverrides)
+            );
+        }
+    } catch (e) {
+        MessageBox.error("Could not save availability. Please check browser storage.");
+        return;
+    }
+
+    oProductsModel.refresh(true);
+    this._refreshBusinessHome();
+    MessageToast.show(
+        bAvailable ? "Item is now available to customers." : "Item is hidden from customers."
+    );
 },
     onEditMenuItem: function (oEvent) {
     var oView = this.getView();
