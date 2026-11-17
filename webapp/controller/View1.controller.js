@@ -730,10 +730,27 @@ _loadReturns: function () {
         aOrders = [];
     }
 
-    // 2. Extract orders that have return requests
+    // 2. Extract return requests for the current role.
+    // Customers only see their own returns; the restaurant sees all requests.
+    var oAppModel = oView.getModel("app");
+    var sCurrentRole = oAppModel.getProperty("/role");
+    var sCurrentUser = oAppModel.getProperty("/currentUser");
+
     var aReturns = aOrders
         .filter(function (oOrder) {
-            return !!oOrder.ReturnStatus;
+            if (!oOrder.ReturnStatus) {
+                return false;
+            }
+
+            if (sCurrentRole === "business") {
+                return true;
+            }
+
+            // Older demo orders without a username remain visible only
+            // to the original demo customer account.
+            return oOrder.CustomerUsername
+                ? oOrder.CustomerUsername === sCurrentUser
+                : sCurrentUser === "customer";
         })
         .map(function (oOrder) {
 
@@ -903,7 +920,8 @@ if (sRole === "business") {
         this._loadProducts();
     }
 
-    if (sSection === "businessReturns") {
+    if (sSection === "businessReturns" ||
+        sSection === "customerReturns") {
         this._loadReturns();
     }
 
