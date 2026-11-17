@@ -254,6 +254,25 @@
                     </customData>
 
                 </Button>
+                
+                <Button
+                    text="My Orders"
+                    icon="sap-icon://shipping-status"
+                    press=".onNavigate"
+                    type="{= ['customerOrders',
+                        'customerTracking',
+                        'customerReturnRequest']
+                        .indexOf(${app>/section}) >= 0
+                        ? 'Emphasized' : 'Transparent' }">
+
+                    <customData>
+                        <core:CustomData
+                            key="section"
+                            value="customerOrders"/>
+                    </customData>
+
+                </Button>
+                <ToolbarSpacer/>
 
                 <Button
                     text="Cart"
@@ -276,24 +295,7 @@
 
                 </Button>
 
-                <Button
-                    text="My Orders"
-                    icon="sap-icon://shipping-status"
-                    press=".onNavigate"
-                    type="{= ['customerOrders',
-                        'customerTracking',
-                        'customerReturnRequest']
-                        .indexOf(${app>/section}) >= 0
-                        ? 'Emphasized' : 'Transparent' }">
-
-                    <customData>
-                        <core:CustomData
-                            key="section"
-                            value="customerOrders"/>
-                    </customData>
-
-                </Button>
-
+                
             </Toolbar>
     <!-- ===================== 1. CUSTOMER HOME ===================== -->
 
@@ -590,18 +592,20 @@
                     <FlexItemData growFactor="1" baseSize="40rem" maxWidth="40rem" minWidth="0"/>
                 </layoutData>
 
-                <!-- HEADER -->
-                <Title text="Your Cart" level="H1" titleStyle="H2"/>
-                <Text
-                    text="{= 'Total items: ' + (Number(${cart>/count}) || 0) }"
-                    class="sapUiTinyMarginTop sapUiSmallMarginBottom"/>
+        
 
                 <!-- EMPTY CART -->
                 <VBox
                     visible="{= ${cart>/items}.length === 0 }"
                     alignItems="Center"
+                    justifyContent="Center"
                     class="sapUiLargeMarginTop sapUiLargeMarginBottom"
-                    renderType="Bare">
+                    renderType="Bare" >
+                           <!-- HEADER -->
+                <Title text="Your Cart" level="H1" titleStyle="H2"/>
+                <Text
+                    text="{= 'Total items: ' + (Number(${cart>/count}) || 0) }"
+                    class="sapUiTinyMarginTop sapUiSmallMarginBottom"/>
                     <core:Icon
                         src="sap-icon://cart"
                         size="3rem"
@@ -652,6 +656,7 @@
                                     <Button
                                         icon="sap-icon://add"
                                         tooltip="Increase quantity"
+                                        enabled="{= (Number(${cart>Quantity}) || 0) &lt; 10 }"
                                         press=".onIncreaseCartItem"/>
                                 </HBox>
                             </VBox>

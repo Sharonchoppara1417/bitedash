@@ -15,7 +15,7 @@ sap.ui.define([
     MessageBox
 ) {
     "use strict";
-
+     var MAX_QTY_PER_ITEM = 10;
     return Controller.extend("bitedash.bitedash.controller.View1", {
 
 // 1. INITIALIZATION
@@ -1306,7 +1306,10 @@ _changeCartQuantity: function (oEvent, iChange) {
 
     var iCurrentQuantity = Number(aItems[iIndex].Quantity) || 1;
     var iNewQuantity = iCurrentQuantity + iChange;
-
+if (iNewQuantity > MAX_QTY_PER_ITEM) {
+    sap.m.MessageToast.show("Maximum " + MAX_QTY_PER_ITEM + " per item.");
+    return;
+}
     // Remove item if quantity becomes zero
     if (iNewQuantity <= 0) {
         var sRemovedName = aItems[iIndex].Name || "Item";
