@@ -1263,7 +1263,7 @@
                             type="Transparent"
                             class="sapUiTinyMarginBegin"
                             press=".onCancelSelectedOrder"
-                            enabled="{= ${selectedOrderedProduct>/Status} === 'Placed' || ${selectedOrderedProduct>/Status} === 'Accepted' }"/>
+                            enabled="{= ['Placed', 'Accepted', 'Preparing', 'Packed'].indexOf(${selectedOrderedProduct>/Status}) >= 0 }"/>
 
                         <Button
                             text="Return Request"
