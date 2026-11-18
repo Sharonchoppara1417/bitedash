@@ -4097,17 +4097,33 @@ onOpenDelayDialog: function () {
         return;
     }
 
-    this.byId("delayReasonSelect")
-        .setSelectedKey("Preparation taking longer");
+    if (!this._pDelayOrderDialog) {
+        this._pDelayOrderDialog = this.loadFragment({
+            name: "bitedash.bitedash.view.fragments.DelayOrderDialog",
+            id: this.getView().getId()
+        });
+    }
 
-    this.byId("delayMinutesSelect")
-        .setSelectedKey("15");
+    this._pDelayOrderDialog.then(function (oDialog) {
+        this.byId("delayReasonSelect")
+            .setSelectedKey("Preparation taking longer");
 
-    this.byId("delayOrderDialog").open();
+        this.byId("delayMinutesSelect")
+            .setSelectedKey("15");
+
+        oDialog.open();
+    }.bind(this)).catch(function (oError) {
+        this._pDelayOrderDialog = null;
+        console.error("Could not load the Order Delay dialog:", oError);
+        MessageBox.error("Could not open the Order Delay dialog. Please try again.");
+    }.bind(this));
 },
 
 onCloseDelayDialog: function () {
-    this.byId("delayOrderDialog").close();
+    var oDialog = this.byId("delayOrderDialog");
+    if (oDialog) {
+        oDialog.close();
+    }
 },
 
 onOpenFlagDialog: function () {
