@@ -45,7 +45,77 @@ sap.ui.define([], function () {
         };
     }
 
+    function fetchCsrfToken() {
+        return window.fetch(SERVICE_ROOT + "/", {
+            method: "GET",
+            headers: {
+                "Accept": "application/json",
+                "X-CSRF-Token": "Fetch"
+            },
+            credentials: "same-origin"
+        }).then(function (oResponse) {
+            if (!oResponse.ok) {
+                throw new Error("Could not obtain CAP security token (HTTP " + oResponse.status + ").");
+            }
+            var sToken = oResponse.headers.get("X-CSRF-Token");
+            if (!sToken) {
+                throw new Error("CAP did not return an X-CSRF-Token header.");
+            }
+            return sToken;
+        });
+    }
+
+    function createMenuItem(oInput) {
+        return Promise.all([
+            fetchCsrfToken(),
+            readCollection("Restaurants")
+        ]).then(function (aResults) {
+            var sToken = aResults[0];
+            var aRestaurants = aResults[1].filter(function (oRestaurant) {
+                return oRestaurant.isActive !== false;
+            });
+            if (!aRestaurants.length) {
+                throw new Error("CAP has no active restaurants.");
+            }
+
+            var oRestaurant = aRestaurants[0];
+            var oPayload = {
+                restaurant_ID: oRestaurant.ID,
+                name: oInput.name,
+                description: oInput.description || "",
+                category: oInput.category || "Other",
+                price: Number(oInput.price),
+                currency: "INR",
+                isAvailable: true
+            };
+
+            return window.fetch(SERVICE_ROOT + "/MenuItems", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "X-CSRF-Token": sToken
+                },
+                credentials: "same-origin",
+                body: JSON.stringify(oPayload)
+            }).then(function (oResponse) {
+                if (!oResponse.ok) {
+                    return oResponse.text().then(function (sBody) {
+                        throw new Error(
+                            "CAP could not create the menu item (HTTP " +
+                            oResponse.status + "): " + sBody
+                        );
+                    });
+                }
+                return oResponse.json();
+            }).then(function (oCreated) {
+                return mapMenuItem(Object.assign({}, oPayload, oCreated), oRestaurant);
+            });
+        });
+    }
+
     return {
+        createMenuItem: createMenuItem,
         loadMenu: function () {
             return Promise.all([
                 readCollection("Restaurants"),
