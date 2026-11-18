@@ -2099,9 +2099,7 @@ _updateCartTotals: function (aItems) {
 
     var aCancellableStatuses = [
         "Placed",
-        "Accepted",
-        "Preparing",
-        "Packed"
+        "Accepted"
     ];
 
     if (aCancellableStatuses.indexOf(oSelected.Status) === -1) {
