@@ -73,6 +73,15 @@ npm run deploy:sqlite
 
 The local database is stored in `db.sqlite`, which is excluded from Git.
 
+### Seed data
+
+The CAP database includes sample seed records for one restaurant (Spice Garden) and six starter menu items. CAP loads these CSV files from `db/data` during database deployment:
+
+- `db/data/bitedash-Restaurants.csv`
+- `db/data/bitedash-MenuItems.csv`
+
+These are demonstration records. They do not replace or modify the existing SAPUI5 OData V2 menu data.
+
 ### Build the CAP backend
 
 ```sh
