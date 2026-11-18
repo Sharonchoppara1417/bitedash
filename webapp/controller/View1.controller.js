@@ -513,19 +513,25 @@ var aAlerts = [
     // Some OData V3 hosts reject $expand, so fall back to plain /Products.
     oODataModel.read("/Products", {
         urlParameters: {
-            "$expand": "Categories"
+            "$expand": "Category"
         },
         success: function (oProductData) {
             var aProducts = oProductData.results || [];
 
             aProducts.forEach(function (oProduct) {
-                var vCategories = oProduct.Categories;
+                // The OData V2 sample service exposes the product's
+                // category as the singular Category navigation property.
+                var vCategory = oProduct.Category;
                 var aProductCategories = [];
 
-                if (vCategories) {
-                    aProductCategories = Array.isArray(vCategories.results)
-                        ? vCategories.results
-                        : (Array.isArray(vCategories) ? vCategories : []);
+                if (vCategory) {
+                    if (Array.isArray(vCategory.results)) {
+                        aProductCategories = vCategory.results;
+                    } else if (Array.isArray(vCategory)) {
+                        aProductCategories = vCategory;
+                    } else if (vCategory.Name) {
+                        aProductCategories = [vCategory];
+                    }
                 }
 
                 var aNames = aProductCategories.map(function (oCategory) {
@@ -558,7 +564,12 @@ var aAlerts = [
                 },
                 error: function (oProductError) {
                     console.error("OData Products request failed:", oProductError);
-                    publishProducts([]);
+
+                    // Keep the last successfully loaded menu visible if a
+                    // refresh fails. Do not replace good data with an empty list.
+                    if (oProductsModel) {
+                        oProductsModel.setProperty("/loading", false);
+                    }
 
                     var sStatus = oProductError && oProductError.statusCode
                         ? " (HTTP " + oProductError.statusCode + ")"
