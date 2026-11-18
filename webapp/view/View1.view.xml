@@ -2467,69 +2467,7 @@
                 <dependents>
 
 
-                    <Dialog
-                        id="flagOrderDialog"
-                        title="Flag Order"
-                        contentWidth="25rem"
-                        draggable="true"
-                        resizable="true">
-
-                        <content>
-                            <VBox class="sapUiMediumMargin" renderType="Bare">
-
-                                <MessageStrip
-                                    text="Select the issue that needs attention."
-                                    type="Error"
-                                    showIcon="true"
-                                    class="sapUiSmallMarginBottom"/>
-
-                                <Label text="Issue Reason" required="true"/>
-
-                                <Select
-                                    id="flagReasonSelect"
-                                    width="100%"
-                                    selectedKey="Item unavailable">
-
-                                    <core:Item key="Item unavailable"
-                                        text="Item unavailable"/>
-                                    <core:Item key="Customer address issue"
-                                        text="Customer address issue"/>
-                                    <core:Item key="Payment issue"
-                                        text="Payment issue"/>
-                                    <core:Item key="Incorrect order details"
-                                        text="Incorrect order details"/>
-                                    <core:Item key="Other"
-                                        text="Other"/>
-
-                                </Select>
-
-                                <Label
-                                    text="Additional Details"
-                                    class="sapUiSmallMarginTop"/>
-
-                                <TextArea
-                                    id="flagDescriptionInput"
-                                    width="100%"
-                                    rows="3"
-                                    placeholder="Describe the issue..."/>
-
-                            </VBox>
-                        </content>
-
-                        <beginButton>
-                            <Button
-                                text="Flag Order"
-                                type="Emphasized"
-                                press=".onConfirmOrderFlag"/>
-                        </beginButton>
-
-                        <endButton>
-                            <Button
-                                text="Cancel"
-                                press=".onCloseFlagDialog"/>
-                        </endButton>
-
-                    </Dialog>
+                    
 
                 </dependents>
             </VBox>
