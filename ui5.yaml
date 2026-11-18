@@ -18,6 +18,8 @@ server:
         backend:
           - path: /V2
             url: https://services.odata.org
+          - path: /odata
+            url: http://localhost:4004
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:
