@@ -5,7 +5,8 @@ sap.ui.define([
     "sap/ui/model/FilterOperator",
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "bitedash/bitedash/util/MenuUtils"
+    "bitedash/bitedash/util/MenuUtils",
+    "bitedash/bitedash/util/OrderStorage"
 ], function (
     Controller,
     JSONModel,
@@ -14,7 +15,8 @@ sap.ui.define([
     FilterOperator,
     MessageToast,
     MessageBox,
-    MenuUtils
+    MenuUtils,
+    OrderStorage
 ) {
     "use strict";
      var MAX_QTY_PER_ITEM = 10;
@@ -687,16 +689,12 @@ var aAlerts = [
         return;
     }
 
-    var aOrders = [];
-    try {
-        aOrders = JSON.parse(localStorage.getItem("biteDashOrders") || "[]");
-        if (!Array.isArray(aOrders)) {
-            aOrders = [];
-        }
-    } catch (e) {
-        console.error("Could not read orders received from another tab:", e);
+    var oOrderResult = OrderStorage.readOrders();
+    if (!oOrderResult.success) {
+        console.error("Could not read orders received from another tab:", oOrderResult.error);
         return;
     }
+    var aOrders = oOrderResult.orders;
 
     var oSavedOrder = aOrders.find(function (oOrder) {
         return String(oOrder.OrderID) === String(oMessage.orderId);
@@ -718,10 +716,8 @@ var aAlerts = [
     if (!sSavedTime || sIncomingTime >= sSavedTime) {
         oSavedOrder.Status = oMessage.status;
         oSavedOrder.StatusUpdatedAt = sIncomingTime;
-        try {
-            localStorage.setItem("biteDashOrders", JSON.stringify(aOrders));
-        } catch (e) {
-            console.error("Could not persist the synchronized order status:", e);
+        if (!OrderStorage.saveOrders(aOrders)) {
+            console.error("Could not persist the synchronized order status.");
         }
     }
 
@@ -730,20 +726,13 @@ var aAlerts = [
 },
 
 _loadOrders: function () {
-    var aOrders = [];
-    var sOrdersSnapshot = localStorage.getItem("biteDashOrders") || "[]";
-    this._sLastOrdersSnapshot = sOrdersSnapshot;
+    var oOrderResult = OrderStorage.readOrders();
+    var aOrders = oOrderResult.orders;
+    this._sLastOrdersSnapshot = oOrderResult.snapshot;
 
-    try {
-        aOrders = JSON.parse(sOrdersSnapshot);
-
-        if (!Array.isArray(aOrders)) {
-            aOrders = [];
-        }
-    } catch (e) {
+    if (!oOrderResult.success) {
         MessageToast.show("Could not read saved orders.");
-        console.error("Order loading failed:", e);
-        aOrders = [];
+        console.error("Order loading failed:", oOrderResult.error);
     }
 
     aOrders.forEach(function (oOrder) {
@@ -794,22 +783,12 @@ _loadOrders: function () {
 _loadReturns: function () {
 
     var oView = this.getView();
-    var aOrders = [];
+    var oOrderResult = OrderStorage.readOrders();
+    var aOrders = oOrderResult.orders;
 
-    // 1. Read saved orders from localStorage
-    try {
-        aOrders = JSON.parse(
-            localStorage.getItem("biteDashOrders") || "[]"
-        );
-
-        // Make sure the saved data is an array
-        if (!Array.isArray(aOrders)) {
-            aOrders = [];
-        }
-
-    } catch (e) {
+    // 1. Read saved orders through the storage utility
+    if (!oOrderResult.success) {
         sap.m.MessageToast.show("Could not load return requests.");
-        aOrders = [];
     }
 
     // 2. Extract return requests for the current role.
@@ -4166,20 +4145,12 @@ _updateSelectedOrder: function (fnUpdate) {
         return false;
     }
 
-    var aOrders;
-
-    try {
-        aOrders = JSON.parse(
-            localStorage.getItem("biteDashOrders") || "[]"
-        );
-
-        if (!Array.isArray(aOrders)) {
-            aOrders = [];
-        }
-    } catch (e) {
+    var oOrderResult = OrderStorage.readOrders();
+    if (!oOrderResult.success) {
         MessageBox.error("Could not read saved orders.");
         return false;
     }
+    var aOrders = oOrderResult.orders;
 
     var oSavedOrder = aOrders.find(function (oOrder) {
         return String(oOrder.OrderID) ===
@@ -4198,12 +4169,7 @@ _updateSelectedOrder: function (fnUpdate) {
 
     fnUpdate(oSavedOrder);
 
-    try {
-        localStorage.setItem(
-            "biteDashOrders",
-            JSON.stringify(aOrders)
-        );
-    } catch (e) {
+    if (!OrderStorage.saveOrders(aOrders)) {
         MessageBox.error("Could not save order changes.");
         return false;
     }
