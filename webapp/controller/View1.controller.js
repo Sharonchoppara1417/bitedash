@@ -2725,6 +2725,48 @@ _updateCartTotals: function (aItems) {
                 MessageToast.show("Rating must be between 0 and 5.");
                 return;
             }
+            // In CAP mode, persist the new item in the shared CAP database.
+            // The existing localStorage flow remains unchanged for OData V2 mode.
+            if (/[?&]menuSource=cap(?:&|$)/i.test(window.location.search)) {
+                var that = this;
+                BiteDashService.createMenuItem({
+                    name: sName,
+                    description: sDescription,
+                    category: sCategory,
+                    price: nPrice
+                }).then(function (oNewProduct) {
+                    var oProductsModel = oView.getModel("products");
+                    var aProducts = oProductsModel.getProperty("/items") || [];
+                    aProducts.push(oNewProduct);
+                    oProductsModel.setProperty("/items", aProducts);
+                    oProductsModel.refresh(true);
+
+                    var oAppModel = oView.getModel("app");
+                    if (oAppModel) {
+                        oAppModel.setProperty("/menuCount", aProducts.length);
+                    }
+
+                    oView.byId("menuItemName").setValue("");
+                    oView.byId("menuItemDescription").setValue("");
+                    oView.byId("menuItemPrice").setValue("");
+                    oView.byId("menuItemRating").setValue(0);
+                    oView.byId("menuItemCategory").setSelectedKey("Food");
+
+                    var oSearchField = oView.byId("foodSearchField");
+                    that._applyFoodFilters(
+                        oSearchField ? oSearchField.getValue() : ""
+                    );
+                    that._refreshBusinessHome();
+                    MessageToast.show("Menu item saved to CAP successfully.");
+                }).catch(function (oError) {
+                    console.error("CAP menu item creation failed:", oError);
+                    MessageBox.error(
+                        "Could not save the menu item to CAP. " + oError.message
+                    );
+                });
+                return;
+            }
+
             var oProductsModel = oView.getModel("products");
             var aProducts = oProductsModel.getProperty("/items") || [];
             var aSavedItems;
