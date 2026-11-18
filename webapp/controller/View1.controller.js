@@ -2040,18 +2040,14 @@ _updateCartTotals: function (aItems) {
                             return;
                         }
 
-                        var aOrders;
-
-                        try {
-                            aOrders = JSON.parse(
-                                localStorage.getItem("biteDashOrders") || "[]"
-                            );
-                        } catch (e) {
+                        var oStorageResult = OrderStorage.readOrders();
+                        if (!oStorageResult.success) {
                             MessageBox.error(
                                 "Could not read saved orders."
                             );
                             return;
                         }
+                        var aOrders = oStorageResult.orders;
 
                         var oSavedOrder = aOrders.find(function (oItem) {
                             return String(oItem.OrderID) ===
@@ -2074,12 +2070,7 @@ _updateCartTotals: function (aItems) {
 
                         oSavedOrder.Status = "Cancelled";
 
-                        try {
-                            localStorage.setItem(
-                                "biteDashOrders",
-                                JSON.stringify(aOrders)
-                            );
-                        } catch (e) {
+                        if (!OrderStorage.saveOrders(aOrders)) {
                             MessageBox.error(
                                 "Could not save the cancellation."
                             );
@@ -2259,16 +2250,12 @@ _updateCartTotals: function (aItems) {
                 "Delivered"
             ];
 
-            var aOrders;
-
-            try {
-                aOrders = JSON.parse(
-                    localStorage.getItem("biteDashOrders") || "[]"
-                );
-            } catch (e) {
+            var oStorageResult = OrderStorage.readOrders();
+            if (!oStorageResult.success) {
                 MessageBox.error("Could not read saved orders.");
                 return;
             }
+            var aOrders = oStorageResult.orders;
 
             var oSavedOrder = aOrders.find(function (oItem) {
                 return String(oItem.OrderID) === String(oOrder.OrderID);
@@ -2301,12 +2288,7 @@ _updateCartTotals: function (aItems) {
             // Clear the active delay warning after the order advances.
             oSavedOrder.IsDelayed = false;
 
-            try {
-                localStorage.setItem(
-                    "biteDashOrders",
-                    JSON.stringify(aOrders)
-                );
-            } catch (e) {
+            if (!OrderStorage.saveOrders(aOrders)) {
                 MessageBox.error("Could not save the updated status.");
                 return;
             }
@@ -2348,20 +2330,12 @@ _updateCartTotals: function (aItems) {
         return;
     }
 
-    var aOrders = [];
-
-    try {
-        aOrders = JSON.parse(
-            localStorage.getItem("biteDashOrders") || "[]"
-        );
-
-        if (!Array.isArray(aOrders)) {
-            aOrders = [];
-        }
-    } catch (e) {
+    var oStorageResult = OrderStorage.readOrders();
+    if (!oStorageResult.success) {
         MessageBox.error("Could not read saved orders.");
         return;
     }
+    var aOrders = oStorageResult.orders;
 
     var oSavedOrder = aOrders.find(function (oOrder) {
         return String(oOrder.OrderID) ===
@@ -2385,12 +2359,7 @@ _updateCartTotals: function (aItems) {
     oSavedOrder.StatusUpdatedAt = new Date().toISOString();
     oSavedOrder.IsDelayed = false;
 
-    try {
-        localStorage.setItem(
-            "biteDashOrders",
-            JSON.stringify(aOrders)
-        );
-    } catch (e) {
+    if (!OrderStorage.saveOrders(aOrders)) {
         MessageBox.error("Could not save the updated order.");
         return;
     }
@@ -3603,16 +3572,12 @@ onToggleAvailable: function (oEvent) {
         return;
     }
 
-    var aOrders = [];
-
-    try {
-        aOrders = JSON.parse(
-            localStorage.getItem("biteDashOrders") || "[]"
-        );
-    } catch (e) {
+    var oStorageResult = OrderStorage.readOrders();
+    if (!oStorageResult.success) {
         sap.m.MessageBox.error("Unable to read saved orders.");
         return;
     }
+    var aOrders = oStorageResult.orders;
 
     var oOrder = aOrders.find(function (oItem) {
         return String(oItem.OrderID) === String(oSelectedOrder.OrderID);
@@ -3632,9 +3597,7 @@ onToggleAvailable: function (oEvent) {
     oOrder.RefundAmount = Number(oOrder.Total || 0);
     oOrder.RefundStatus = "Pending";
 
-    try {
-        localStorage.setItem("biteDashOrders", JSON.stringify(aOrders));
-    } catch (e) {
+    if (!OrderStorage.saveOrders(aOrders)) {
         sap.m.MessageBox.error("Could not save the return request.");
         return;
     }
@@ -3676,16 +3639,12 @@ onToggleAvailable: function (oEvent) {
 
     var oReturn = oContext.getObject();
     var sOrderId = String(oReturn.OrderID);
-    var aOrders = [];
-
-    try {
-        aOrders = JSON.parse(
-            localStorage.getItem("biteDashOrders") || "[]"
-        );
-    } catch (e) {
+    var oStorageResult = OrderStorage.readOrders();
+    if (!oStorageResult.success) {
         sap.m.MessageBox.error("Unable to read saved orders.");
         return;
     }
+    var aOrders = oStorageResult.orders;
 
     var oOrder = aOrders.find(function (oItem) {
         return String(oItem.OrderID) === sOrderId;
@@ -3742,9 +3701,7 @@ onToggleAvailable: function (oEvent) {
         oOrder.RefundCompletedAt = new Date().toLocaleString();
     }
 
-    try {
-        localStorage.setItem("biteDashOrders", JSON.stringify(aOrders));
-    } catch (e) {
+    if (!OrderStorage.saveOrders(aOrders)) {
         sap.m.MessageBox.error("Could not save the return update.");
         return;
     }
