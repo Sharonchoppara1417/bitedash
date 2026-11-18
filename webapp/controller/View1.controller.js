@@ -510,7 +510,7 @@ var aAlerts = [
     });
 
     // Try the expanded response first to retain category names.
-    // Some OData V3 hosts reject $expand, so fall back to plain /Products.
+    // If category expansion fails, fall back to the plain /Products request.
     oODataModel.read("/Products", {
         urlParameters: {
             "$expand": "Category"
@@ -577,7 +577,7 @@ var aAlerts = [
 
                     MessageBox.error(
                         "OData Products could not be loaded" + sStatus +
-                        ". Check the /V3/OData/OData.svc/Products request in the browser Network tab."
+                        ". Check the /V2/OData/OData.svc/Products request in the browser Network tab."
                     );
                 }
             });
