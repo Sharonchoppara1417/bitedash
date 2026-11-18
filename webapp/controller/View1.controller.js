@@ -639,14 +639,33 @@ var aAlerts = [
     },
 
     _broadcastOrderUpdate: function (oOrder) {
-    // Notify every other BiteDash tab immediately after the order is saved.
-    if (this._oOrdersChannel && oOrder && oOrder.OrderID != null) {
-        this._oOrdersChannel.postMessage({
+    // Ensure this controller always has an active channel before publishing.
+    if (!oOrder || oOrder.OrderID == null || !oOrder.Status) {
+        console.warn("BiteDash order broadcast skipped: order data is incomplete.", oOrder);
+        return;
+    }
+
+    try {
+        if (!this._oOrdersChannel && typeof window.BroadcastChannel === "function") {
+            this._oOrdersChannel = new window.BroadcastChannel("bitedash-orders-sync");
+        }
+
+        if (!this._oOrdersChannel) {
+            console.error("BiteDash order broadcast unavailable: BroadcastChannel is not supported.");
+            return;
+        }
+
+        var oPayload = {
             type: "ORDER_UPDATED",
             orderId: String(oOrder.OrderID),
             status: oOrder.Status,
             updatedAt: oOrder.StatusUpdatedAt || new Date().toISOString()
-        });
+        };
+
+        this._oOrdersChannel.postMessage(oPayload);
+        console.log("BiteDash order update broadcast sent:", oPayload);
+    } catch (e) {
+        console.error("BiteDash order broadcast failed:", e);
     }
 },
 
@@ -2297,7 +2316,6 @@ _updateCartTotals: function (aItems) {
             }
 
             oSavedOrder.Status = aStatuses[iCurrentIndex + 1];
-    oSavedOrder.StatusUpdatedAt = new Date().toISOString();
             oSavedOrder.StatusUpdatedAt = new Date().toISOString();
 
             try {
@@ -2379,8 +2397,9 @@ _updateCartTotals: function (aItems) {
         return;
     }
 
-    // Advance to the next status
+    // Advance to the next status and record its update time.
     oSavedOrder.Status = aStatuses[iCurrentIndex + 1];
+    oSavedOrder.StatusUpdatedAt = new Date().toISOString();
 
     try {
         localStorage.setItem(
