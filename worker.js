@@ -2,9 +2,9 @@ export default {
     async fetch(request, env) {
         const url = new URL(request.url);
 
-        // Forward OData requests to the public OData V3 service.
+        // Forward OData requests to the public OData V2 service.
         // This replaces the development-only fiori-tools-proxy on Cloudflare.
-        if (url.pathname === "/V3" || url.pathname.startsWith("/V3/")) {
+        if (url.pathname === "/V2" || url.pathname.startsWith("/V2/")) {
             const upstreamUrl = new URL(
                 url.pathname + url.search,
                 "https://services.odata.org"
