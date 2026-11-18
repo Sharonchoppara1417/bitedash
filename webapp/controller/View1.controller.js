@@ -4138,16 +4138,30 @@ onOpenFlagDialog: function () {
         return;
     }
 
-    this.byId("flagReasonSelect")
-        .setSelectedKey("Item unavailable");
+    if (!this._pFlagOrderDialog) {
+        this._pFlagOrderDialog = this.loadFragment({
+            name: "bitedash.bitedash.view.fragments.FlagOrderDialog"
+        });
+    }
 
-    this.byId("flagDescriptionInput").setValue("");
+    this._pFlagOrderDialog.then(function (oDialog) {
+        this.byId("flagReasonSelect")
+            .setSelectedKey("Item unavailable");
 
-    this.byId("flagOrderDialog").open();
+        this.byId("flagDescriptionInput").setValue("");
+        oDialog.open();
+    }.bind(this)).catch(function (oError) {
+        this._pFlagOrderDialog = null;
+        console.error("Could not load the Flag Order dialog:", oError);
+        MessageBox.error("Could not open the Flag Order dialog. Please try again.");
+    }.bind(this));
 },
 
 onCloseFlagDialog: function () {
-    this.byId("flagOrderDialog").close();
+    var oDialog = this.byId("flagOrderDialog");
+    if (oDialog) {
+        oDialog.close();
+    }
 },
 
 _updateSelectedOrder: function (fnUpdate) {
