@@ -474,6 +474,12 @@
                         class="modernSearch"/>
 
                     <Button
+                        icon="sap-icon://refresh"
+                        tooltip="Refresh products"
+                        type="Transparent"
+                        press=".onRefreshMenu"/>
+
+                    <Button
                         text="Add to Cart"
                         icon="sap-icon://cart"
                         type="Emphasized"
