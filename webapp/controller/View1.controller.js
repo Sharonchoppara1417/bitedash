@@ -2328,6 +2328,8 @@ _updateCartTotals: function (aItems) {
 
             oSavedOrder.Status = aStatuses[iCurrentIndex + 1];
             oSavedOrder.StatusUpdatedAt = new Date().toISOString();
+            // Clear the active delay warning after the order advances.
+            oSavedOrder.IsDelayed = false;
 
             try {
                 localStorage.setItem(
@@ -2408,9 +2410,10 @@ _updateCartTotals: function (aItems) {
         return;
     }
 
-    // Advance to the next status and record its update time.
+    // Advance to the next status, record its update time, and clear the active delay warning.
     oSavedOrder.Status = aStatuses[iCurrentIndex + 1];
     oSavedOrder.StatusUpdatedAt = new Date().toISOString();
+    oSavedOrder.IsDelayed = false;
 
     try {
         localStorage.setItem(
