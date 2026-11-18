@@ -4,7 +4,8 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/m/MessageToast",
-    "sap/m/MessageBox"
+    "sap/m/MessageBox",
+    "bitedash/bitedash/util/MenuUtils"
 ], function (
     Controller,
     JSONModel,
@@ -12,7 +13,8 @@ sap.ui.define([
     Filter,
     FilterOperator,
     MessageToast,
-    MessageBox
+    MessageBox,
+    MenuUtils
 ) {
     "use strict";
      var MAX_QTY_PER_ITEM = 10;
@@ -1202,7 +1204,7 @@ onMenuProductSelect: function (oEvent) {
                 }
 
                 var oProduct = oContext.getObject();
-                var sKey = this._getMenuProductKey(oProduct);
+                var sKey = MenuUtils.getMenuProductKey(oProduct);
 
                 if (sKey === null) {
                     return;
@@ -1210,7 +1212,7 @@ onMenuProductSelect: function (oEvent) {
 
                 var bAlreadySelected =
                     this._aSelectedMenuProducts.some(function (oItem) {
-                        return this._getMenuProductKey(oItem) === sKey;
+                        return MenuUtils.getMenuProductKey(oItem) === sKey;
                     }.bind(this));
 
                 if (!bAlreadySelected) {
@@ -1226,14 +1228,14 @@ onMenuProductSelect: function (oEvent) {
             // Deselect only products belonging to the current filter
             var aCurrentKeys = aContexts.map(function (oContext) {
                 return oContext
-                    ? this._getMenuProductKey(oContext.getObject())
+                    ? MenuUtils.getMenuProductKey(oContext.getObject())
                     : null;
             }.bind(this));
 
             this._aSelectedMenuProducts =
                 this._aSelectedMenuProducts.filter(function (oItem) {
                     return aCurrentKeys.indexOf(
-                        this._getMenuProductKey(oItem)
+                        MenuUtils.getMenuProductKey(oItem)
                     ) === -1;
                 }.bind(this));
         }
@@ -1252,7 +1254,7 @@ onMenuProductSelect: function (oEvent) {
             }
 
             var oProduct = oContext.getObject();
-            var sProductKey = this._getMenuProductKey(oProduct);
+            var sProductKey = MenuUtils.getMenuProductKey(oProduct);
 
             if (sProductKey === null) {
                 return;
@@ -1260,7 +1262,7 @@ onMenuProductSelect: function (oEvent) {
 
             var iIndex =
                 this._aSelectedMenuProducts.findIndex(function (oItem) {
-                    return this._getMenuProductKey(oItem) === sProductKey;
+                    return MenuUtils.getMenuProductKey(oItem) === sProductKey;
                 }.bind(this));
 
             if (bSelected) {
@@ -1410,14 +1412,14 @@ onAddSelectedProductToCart: function () {
 
     aSelectedProducts.forEach(function (oProduct) {
 
-        var sKey = this._getMenuProductKey(oProduct);
+        var sKey = MenuUtils.getMenuProductKey(oProduct);
 
         if (sKey === null) {
             return;
         }
 
         var iIndex = aCartItems.findIndex(function (oItem) {
-            return this._getMenuProductKey(oItem) === sKey;
+            return MenuUtils.getMenuProductKey(oItem) === sKey;
         }.bind(this));
 
         if (iIndex !== -1) {
@@ -1465,18 +1467,7 @@ onAddSelectedProductToCart: function () {
 
 
 
-_getMenuProductKey: function (oProduct) {
-    if (
-        !oProduct ||
-        oProduct.ID === undefined ||
-        oProduct.ID === null
-    ) {
-        return null;
-    }
 
-    // ID 0 is a valid product ID
-    return String(oProduct.ID);
-},
 
 onIncreaseCartItem: function (oEvent) {
     this._changeCartQuantity(oEvent, 1);
