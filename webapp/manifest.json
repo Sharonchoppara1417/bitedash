@@ -29,7 +29,7 @@
     "dataSources": {
       "mainService": {
        
-        "uri": "/V3/OData/OData.svc/",
+        "uri": "/V2/OData/OData.svc/",
        
         "type": "OData",
         "settings": {
@@ -83,7 +83,7 @@
         "dataSource": "mainService",
         "preload": true,
         "settings": {
-          "maxDataServiceVersion": "3.0",
+          "maxDataServiceVersion": "2.0",
             "useBatch": false
         }
       }
