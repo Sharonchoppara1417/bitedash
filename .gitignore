@@ -8,3 +8,8 @@ mta-*
 resources
 archive.zip
 .*_mta_build_tmp
+
+# Local CAP database files
+/db.sqlite
+/db.sqlite-shm
+/db.sqlite-wal
