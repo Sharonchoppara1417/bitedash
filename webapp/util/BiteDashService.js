@@ -45,33 +45,9 @@ sap.ui.define([], function () {
         };
     }
 
-    function fetchCsrfToken() {
-        return window.fetch(SERVICE_ROOT + "/", {
-            method: "GET",
-            headers: {
-                "Accept": "application/json",
-                "X-CSRF-Token": "Fetch"
-            },
-            credentials: "same-origin"
-        }).then(function (oResponse) {
-            if (!oResponse.ok) {
-                throw new Error("Could not obtain CAP security token (HTTP " + oResponse.status + ").");
-            }
-            var sToken = oResponse.headers.get("X-CSRF-Token");
-            if (!sToken) {
-                throw new Error("CAP did not return an X-CSRF-Token header.");
-            }
-            return sToken;
-        });
-    }
-
     function createMenuItem(oInput) {
-        return Promise.all([
-            fetchCsrfToken(),
-            readCollection("Restaurants")
-        ]).then(function (aResults) {
-            var sToken = aResults[0];
-            var aRestaurants = aResults[1].filter(function (oRestaurant) {
+        return readCollection("Restaurants").then(function (aRestaurants) {
+            aRestaurants = aRestaurants.filter(function (oRestaurant) {
                 return oRestaurant.isActive !== false;
             });
             if (!aRestaurants.length) {
@@ -89,12 +65,15 @@ sap.ui.define([], function () {
                 isAvailable: true
             };
 
+            // In local BAS development, the UI5 proxy calls CAP directly.
+            // The standalone CAP service does not issue an X-CSRF-Token.
+            // When deployed behind an SAP Application Router, CSRF protection
+            // is handled by the router.
             return window.fetch(SERVICE_ROOT + "/MenuItems", {
                 method: "POST",
                 headers: {
                     "Accept": "application/json",
-                    "Content-Type": "application/json",
-                    "X-CSRF-Token": sToken
+                    "Content-Type": "application/json"
                 },
                 credentials: "same-origin",
                 body: JSON.stringify(oPayload)
