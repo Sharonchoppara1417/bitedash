@@ -6,7 +6,8 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
     "bitedash/bitedash/util/MenuUtils",
-    "bitedash/bitedash/util/OrderStorage"
+    "bitedash/bitedash/util/OrderStorage",
+    "bitedash/bitedash/util/BiteDashService"
 ], function (
     Controller,
     JSONModel,
@@ -16,7 +17,8 @@ sap.ui.define([
     MessageToast,
     MessageBox,
     MenuUtils,
-    OrderStorage
+    OrderStorage,
+    BiteDashService
 ) {
     "use strict";
      var MAX_QTY_PER_ITEM = 10;
@@ -494,6 +496,31 @@ var aAlerts = [
             customCount: aCustomItems.length,
             totalCount: aCombined.length
         });
+    }
+
+    // Optional CAP-backed menu mode for Phase 2.1.
+    // Default behavior remains the existing OData V2 menu.
+    if (/[?&]menuSource=cap(?:&|$)/i.test(window.location.search)) {
+        BiteDashService.loadMenu().then(function (oMenuData) {
+            oCategoriesModel.setProperty("/items", oMenuData.categories);
+            publishProducts(oMenuData.products);
+            MessageToast.show(
+                oMenuData.products.length +
+                " CAP menu items loaded for " +
+                oMenuData.restaurant.name + "."
+            );
+        }).catch(function (oError) {
+            console.error("CAP menu loading failed:", oError);
+            if (oProductsModel) {
+                oProductsModel.setProperty("/loading", false);
+            }
+            MessageBox.error(
+                "CAP menu could not be loaded. Check that the CAP server is running " +
+                "on port 4004 and that /odata/v1/bitedash is available. " +
+                oError.message
+            );
+        });
+        return;
     }
 
     if (!oODataModel || typeof oODataModel.read !== "function") {
