@@ -162,8 +162,10 @@ onInit: function () {
                 oMessageEvent.data &&
                 oMessageEvent.data.type === "ORDER_UPDATED"
             ) {
-                this._loadOrders();
-                this._loadReturns();
+                // Apply the status carried by the message before rebuilding
+                // the customer models. This avoids relying only on a storage
+                // event or a later polling cycle in the other tab.
+                this._applyIncomingOrderUpdate(oMessageEvent.data);
             }
         }.bind(this);
     }
@@ -637,14 +639,62 @@ var aAlerts = [
     },
 
     _broadcastOrderUpdate: function (oOrder) {
-    // Notify other open tabs immediately after the order is saved.
+    // Notify every other BiteDash tab immediately after the order is saved.
     if (this._oOrdersChannel && oOrder && oOrder.OrderID != null) {
         this._oOrdersChannel.postMessage({
             type: "ORDER_UPDATED",
             orderId: String(oOrder.OrderID),
-            status: oOrder.Status
+            status: oOrder.Status,
+            updatedAt: oOrder.StatusUpdatedAt || new Date().toISOString()
         });
     }
+},
+
+    _applyIncomingOrderUpdate: function (oMessage) {
+    if (!oMessage || oMessage.orderId == null || !oMessage.status) {
+        return;
+    }
+
+    var aOrders = [];
+    try {
+        aOrders = JSON.parse(localStorage.getItem("biteDashOrders") || "[]");
+        if (!Array.isArray(aOrders)) {
+            aOrders = [];
+        }
+    } catch (e) {
+        console.error("Could not read orders received from another tab:", e);
+        return;
+    }
+
+    var oSavedOrder = aOrders.find(function (oOrder) {
+        return String(oOrder.OrderID) === String(oMessage.orderId);
+    });
+
+    if (!oSavedOrder) {
+        // No matching order in this tab's snapshot; still reload in case
+        // the latest order list has just been written by the other tab.
+        this._loadOrders();
+        this._loadReturns();
+        return;
+    }
+
+    // The BroadcastChannel payload is the immediate status update. Merge it
+    // into this tab's saved snapshot so the customer view never waits for a
+    // separate storage/visibility event.
+    var sIncomingTime = oMessage.updatedAt || new Date().toISOString();
+    var sSavedTime = oSavedOrder.StatusUpdatedAt || "";
+    if (!sSavedTime || sIncomingTime >= sSavedTime) {
+        oSavedOrder.Status = oMessage.status;
+        oSavedOrder.StatusUpdatedAt = sIncomingTime;
+        try {
+            localStorage.setItem("biteDashOrders", JSON.stringify(aOrders));
+        } catch (e) {
+            console.error("Could not persist the synchronized order status:", e);
+        }
+    }
+
+    this._loadOrders();
+    this._loadReturns();
 },
 
 _loadOrders: function () {
@@ -2247,6 +2297,8 @@ _updateCartTotals: function (aItems) {
             }
 
             oSavedOrder.Status = aStatuses[iCurrentIndex + 1];
+    oSavedOrder.StatusUpdatedAt = new Date().toISOString();
+            oSavedOrder.StatusUpdatedAt = new Date().toISOString();
 
             try {
                 localStorage.setItem(
