@@ -39,8 +39,5 @@
   "sapuxLayer": "CUSTOMER_BASE",
   "engines": {
     "node": ">=22"
-  },
-  "cds": {
-    "server": {}
   }
 }
