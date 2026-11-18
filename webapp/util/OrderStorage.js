@@ -5,9 +5,10 @@ sap.ui.define([], function () {
 
     return {
         readOrders: function () {
-            var sSnapshot = localStorage.getItem(STORAGE_KEY) || "[]";
+            var sSnapshot = "[]";
 
             try {
+                sSnapshot = localStorage.getItem(STORAGE_KEY) || "[]";
                 var aOrders = JSON.parse(sSnapshot);
 
                 return {
