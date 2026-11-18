@@ -38,4 +38,47 @@ An SAP Fiori application.
 
 1. Active NodeJS LTS (Long Term Support) version and associated supported NPM version.  (See https://nodejs.org)
 
+## BiteDash CAP Backend (Phase 1)
 
+The CAP Node.js backend is being introduced alongside the existing SAPUI5 application.
+The existing OData V2 demo menu service and frontend behavior remain unchanged.
+
+### Requirements
+
+- Node.js 22 or newer
+- npm
+
+### Start the CAP service locally
+
+After pulling the latest changes, run:
+
+```sh
+npm install
+npm run start:cap
+```
+
+The first `npm install` also synchronizes `package-lock.json` with the newly added CAP dependencies.
+
+The CAP OData V4 service is exposed locally at:
+
+```
+http://localhost:4004/odata/v1/bitedash/
+```
+
+### Prepare the local SQLite database
+
+```sh
+npm run deploy:sqlite
+```
+
+The local database is stored in `db.sqlite`, which is excluded from Git.
+
+### Build the CAP backend
+
+```sh
+npm run build:cap
+```
+
+The backend foundation currently includes Restaurants, MenuItems, Orders, OrderItems,
+OrderStatusHistory, and ReturnRequests. Order and return status transitions are validated
+by CAP actions. The SAPUI5 frontend is not yet connected to these APIs; that is a later phase.
