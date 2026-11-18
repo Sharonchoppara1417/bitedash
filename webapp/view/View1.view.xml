@@ -2466,76 +2466,7 @@
                 </grid:CSSGrid>
                 <dependents>
 
-                    <Dialog
-                        id="delayOrderDialog"
-                        title="Report Order Delay"
-                        contentWidth="25rem"
-                        draggable="true"
-                        resizable="true">
 
-                        <content>
-                            <VBox class="sapUiMediumMargin" renderType="Bare">
-
-                                <MessageStrip
-                                    text="Inform the customer about the additional preparation time."
-                                    type="Warning"
-                                    showIcon="true"
-                                    class="sapUiSmallMarginBottom"/>
-
-                                <Label text="Delay Reason" required="true"/>
-
-                                <Select
-                                    id="delayReasonSelect"
-                                    width="100%"
-                                    selectedKey="Preparation taking longer">
-
-                                    <core:Item key="Preparation taking longer"
-                                        text="Preparation taking longer"/>
-                                    <core:Item key="High restaurant workload"
-                                        text="High restaurant workload"/>
-                                    <core:Item key="Ingredient availability"
-                                        text="Ingredient availability"/>
-                                    <core:Item key="Delivery partner unavailable"
-                                        text="Delivery partner unavailable"/>
-                                    <core:Item key="Other"
-                                        text="Other"/>
-
-                                </Select>
-
-                                <Label
-                                    text="Additional Delay"
-                                    required="true"
-                                    class="sapUiSmallMarginTop"/>
-
-                                <Select
-                                    id="delayMinutesSelect"
-                                    width="100%"
-                                    selectedKey="15">
-
-                                    <core:Item key="15" text="15 minutes"/>
-                                    <core:Item key="30" text="30 minutes"/>
-                                    <core:Item key="45" text="45 minutes"/>
-                                    <core:Item key="60" text="60 minutes"/>
-
-                                </Select>
-
-                            </VBox>
-                        </content>
-
-                        <beginButton>
-                            <Button
-                                text="Confirm Delay"
-                                type="Emphasized"
-                                press=".onConfirmOrderDelay"/>
-                        </beginButton>
-
-                        <endButton>
-                            <Button
-                                text="Cancel"
-                                press=".onCloseDelayDialog"/>
-                        </endButton>
-
-                    </Dialog>
                     <Dialog
                         id="flagOrderDialog"
                         title="Flag Order"
