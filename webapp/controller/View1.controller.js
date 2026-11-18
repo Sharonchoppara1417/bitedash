@@ -4099,8 +4099,7 @@ onOpenDelayDialog: function () {
 
     if (!this._pDelayOrderDialog) {
         this._pDelayOrderDialog = this.loadFragment({
-            name: "bitedash.bitedash.view.fragments.DelayOrderDialog",
-            id: this.getView().getId()
+            name: "bitedash.bitedash.view.fragments.DelayOrderDialog"
         });
     }
 
